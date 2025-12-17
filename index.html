@@ -413,6 +413,24 @@
             Mohon izinkan akses lokasi pada browser Anda.
           </div>
         </div>
+
+        <div class="location-card" id="locationCard">
+  <!-- ... existing code ... -->
+</div>
+
+<!-- TAMBAHKAN INI -->
+<div id="permissionHelper" style="display: none; margin-bottom: 20px;">
+  <div style="background: #fff3cd; padding: 16px; border-radius: 8px; border-left: 4px solid #ff9800;">
+    <strong>⚠️ Akses Lokasi Dibutuhkan</strong><br>
+    <small>Klik tombol di bawah untuk memberikan izin akses lokasi:</small><br>
+    <button 
+      type="button" 
+      onclick="requestLocationPermission()" 
+      style="margin-top: 12px; width: 100%; padding: 12px; background: #ff9800; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+      📍 Izinkan Akses Lokasi
+    </button>
+  </div>
+</div>
         
         <div class="btn-group">
           <button type="button" class="btn-secondary" onclick="getLocation()">
@@ -439,6 +457,49 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+
+    function requestLocationPermission() {
+  if (!navigator.geolocation) {
+    alert('Browser Anda tidak mendukung GPS.');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      document.getElementById('permissionHelper').style.display = 'none';
+      getLocation();
+    },
+    function(error) {
+      if (error.code === error.PERMISSION_DENIED) {
+        alert('Akses lokasi ditolak.\n\nCara mengizinkan:\n1. Buka Settings HP\n2. Apps → Browser\n3. Permissions → Location → Allow');
+      }
+    }
+  );
+}
+
+// Tampilkan helper jika permission denied
+function getLocation() {
+  // ... existing code ...
+  
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      // ... existing success code ...
+    },
+    function(error) {
+      // ... existing error code ...
+      
+      // TAMBAHKAN INI
+      if (error.code === error.PERMISSION_DENIED) {
+        document.getElementById('permissionHelper').style.display = 'block';
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
     // ========================================
     // KONFIGURASI - GANTI DENGAN DATA ANDA
     // ========================================
