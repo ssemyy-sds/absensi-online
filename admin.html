@@ -93,17 +93,18 @@
       </div>
       <div id="loading" class="loading"><div class="spinner"></div><div>Memuat data...</div></div>
       <div class="table-container" id="tableContainer" style="display: none;">
-       <table>
+      <table>
   <thead>
     <tr>
       <th>No</th>
       <th>Tanggal/Waktu</th>
       <th>Nama</th>
       <th>NPM</th>
-      <th>Kelompok</th> <!-- TAMBAHAN BARU -->
+      <th>Kelompok</th>
       <th>Status</th>
       <th>Jarak (m)</th>
-      <th>Koordinat</th>
+      <th>Device ID</th> <!-- BARU -->
+      <th>IP Address</th> <!-- BARU -->
     </tr>
   </thead>
   <tbody id="tableBody"></tbody>
@@ -233,13 +234,24 @@
       document.getElementById('stats').style.display = 'grid';
     }
 
-    function displayData(data) {
+       function displayData(data) {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
   
   data.forEach((row, index) => {
     const tr = document.createElement('tr');
     const date = new Date(row.created_at);
+    
+    // Highlight duplicate device
+    const isDuplicate = data.filter(r => 
+      r.device_id === row.device_id && 
+      r.id !== row.id &&
+      new Date(r.created_at).toDateString() === date.toDateString()
+    ).length > 0;
+    
+    if (isDuplicate) {
+      tr.style.background = '#ffebee'; // Red highlight
+    }
     
     tr.innerHTML = `
       <td>${index + 1}</td>
@@ -252,13 +264,15 @@
       <td>${row.kelompok || '-'}</td>
       <td><span class="badge badge-success">${row.status}</span></td>
       <td>${row.jarak}m</td>
-      <td><small>${row.alamat}</small></td>
+      <td><small>${row.device_id ? row.device_id.substring(0, 12) + '...' : '-'}</small></td>
+      <td><small>${row.ip_address || '-'}</small></td>
     `;
     tbody.appendChild(tr);
   });
   
   document.getElementById('loading').style.display = 'none';
   document.getElementById('tableContainer').style.display = 'block';
+}
 }
 
     function filterTable() {
