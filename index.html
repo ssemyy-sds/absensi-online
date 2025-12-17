@@ -19,8 +19,8 @@
     .form-group { margin-bottom: 20px; }
     label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
     .required { color: #d93025; }
-    input { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s; font-family: inherit; }
-    input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+    input, select { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s; font-family: inherit; background: white; }
+    input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
     .location-card { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
     .location-card.loading { border-color: #ffb74d; background: #fff3e0; }
     .location-card.success { border-color: #66bb6a; background: #e8f5e9; }
@@ -38,9 +38,10 @@
     .btn-primary:disabled { background: #bdbdbd; cursor: not-allowed; box-shadow: none; }
     .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
     .btn-secondary:hover { background: #f5f5f5; }
+    .btn-permission { background: #ff9800; color: white; margin-bottom: 16px; }
+    .btn-permission:hover { background: #f57c00; }
     .message { padding: 16px; border-radius: 8px; margin-bottom: 20px; display: none; }
     .message.show { display: block; }
-    .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; }
     .loading-overlay.show { display: flex; }
@@ -48,9 +49,34 @@
     .spinner { width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .help-text { font-size: 12px; color: #666; margin-top: 4px; }
-    #debugPanel { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #000; color: #0f0; padding: 16px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; z-index: 10000; border-top: 2px solid #0f0; }
-    #debugToggle { position: fixed; bottom: 20px; right: 20px; background: #000; color: #0f0; border: 2px solid #0f0; padding: 12px; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; z-index: 9999; }
-    @media (max-width: 640px) { body { padding: 0; } .container { border-radius: 0; } .btn-group { flex-direction: column; } }
+    
+    /* Success Modal */
+    .success-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
+    .success-modal.show { display: flex; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .success-content { background: white; border-radius: 20px; padding: 40px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.4s ease; }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .success-icon { font-size: 80px; margin-bottom: 20px; animation: scaleIn 0.5s ease; }
+    @keyframes scaleIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .success-title { font-size: 28px; color: #2e7d32; font-weight: 700; margin-bottom: 16px; }
+    .success-details { background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left; }
+    .success-details .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+    .success-details .row:last-child { border-bottom: none; }
+    .success-details .label { color: #666; font-size: 14px; }
+    .success-details .value { color: #333; font-weight: 600; font-size: 14px; }
+    .success-notice { background: #fff3cd; border: 1px solid #ffc107; padding: 16px; border-radius: 8px; margin: 20px 0; font-size: 14px; line-height: 1.6; color: #856404; }
+    .success-notice strong { display: block; margin-bottom: 8px; font-size: 15px; }
+    .btn-ok { width: 100%; padding: 16px; background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 20px; }
+    .btn-ok:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(46, 125, 50, 0.4); }
+    
+    @media (max-width: 640px) { 
+      body { padding: 0; } 
+      .container { border-radius: 0; } 
+      .btn-group { flex-direction: column; }
+      .success-content { padding: 30px 20px; }
+      .success-icon { font-size: 60px; }
+      .success-title { font-size: 24px; }
+    }
   </style>
 </head>
 <body>
@@ -62,24 +88,49 @@
     <div class="content">
       <div class="info-box">
         <strong>ℹ️ Informasi:</strong><br>
-        Absensi tercatat sebagai <strong>HADIR</strong> jika dalam radius <strong id="radiusInfo">200m</strong> dari kampus.<br>
-        <small>💡 Tap 🐛 untuk debug</small>
+        Absensi tercatat sebagai <strong>HADIR</strong> jika dalam radius <strong id="radiusInfo">200m</strong> dari kampus.
       </div>
+      
       <div class="message" id="message"></div>
+      
       <div class="alert-box" id="alertBox">
         <strong>⚠️ Perhatian:</strong><br>
         <span id="alertText"></span>
       </div>
+      
+      <!-- Tombol Manual Request Permission -->
+      <button type="button" class="btn-permission" id="requestPermissionBtn" style="display: none;" onclick="requestLocationPermission()">
+        📍 Izinkan Akses Lokasi
+      </button>
+      
       <form id="absensiForm">
         <div class="form-group">
           <label>Nama Lengkap <span class="required">*</span></label>
-          <input type="text" id="nama" placeholder="Masukkan nama" required autocomplete="name">
+          <input type="text" id="nama" placeholder="Masukkan nama lengkap" required autocomplete="name">
         </div>
+        
         <div class="form-group">
           <label>NPM <span class="required">*</span></label>
           <input type="text" id="npm" placeholder="Masukkan NPM" required autocomplete="off">
-          <div class="help-text">Contoh: 2106123456</div>
+          <div class="help-text">Contoh: 231030003</div>
         </div>
+        
+        <!-- KOLOM KELOMPOK BARU -->
+        <div class="form-group">
+          <label>Kelompok <span class="required">*</span></label>
+          <select id="kelompok" required>
+            <option value="">-- Pilih Kelompok --</option>
+            <option value="Kelompok 1">Kelompok 1</option>
+            <option value="Kelompok 2">Kelompok 2</option>
+            <option value="Kelompok 3">Kelompok 3</option>
+            <option value="Kelompok 4">Kelompok 4</option>
+            <option value="Kelompok 5">Kelompok 5</option>
+            <option value="Kelompok 6">Kelompok 6</option>
+            <option value="Kelompok 7">Kelompok 7</option>
+            <option value="Kelompok 8">Kelompok 8</option>
+          </select>
+        </div>
+        
         <div class="location-card" id="locationCard">
           <div class="location-header">
             <span>📍</span>
@@ -87,6 +138,7 @@
           </div>
           <div class="location-details" id="locationDetails">Mohon izinkan akses lokasi.</div>
         </div>
+        
         <div class="btn-group">
           <button type="button" class="btn-secondary" onclick="refreshLocation()">🔄 Refresh</button>
           <button type="submit" class="btn-primary" id="submitBtn" disabled>
@@ -96,20 +148,34 @@
       </form>
     </div>
   </div>
+  
+  <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
       <div class="spinner"></div>
       <div>Mengirim data...</div>
     </div>
   </div>
-  <div id="debugPanel">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #fff;">
-      <strong>🐛 Debug</strong>
-      <button onclick="clearLog()" style="background: #f00; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Clear</button>
+
+  <!-- Success Modal -->
+  <div class="success-modal" id="successModal">
+    <div class="success-content">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Absensi Berhasil!</div>
+      
+      <div class="success-details" id="successDetails">
+        <!-- Will be filled by JavaScript -->
+      </div>
+      
+      <div class="success-notice">
+        <strong>📸 PENTING:</strong>
+        Silakan <strong>screenshot</strong> halaman ini sebagai bukti kehadiran Anda.<br><br>
+        <strong>⚠️ Catatan:</strong> Cukup submit <strong>1x saja</strong>. Jangan submit ulang!
+      </div>
+      
+      <button class="btn-ok" onclick="closeSuccessModal()">OK, Saya Mengerti</button>
     </div>
-    <div id="debugLog"></div>
   </div>
-  <button id="debugToggle" onclick="toggleDebug()">🐛</button>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -119,8 +185,8 @@
     const CONFIG = {
       supabaseUrl: 'https://dgcislmedkwmercjffoz.supabase.co',
       supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ',
-      kampusLat: 1.054548, //infineon
-      kampusLng: 104.039517, //infineon
+      kampusLat: 1.054447304267865,
+      kampusLng: 104.03979411851462,
       maxRadius: 200,
       namaKampus: 'Universitas Riau Kepulauan'
     };
@@ -132,8 +198,7 @@
       userLat: null,
       userLng: null,
       isInRadius: false,
-      debugEnabled: false,
-      logs: []
+      permissionDenied: false
     };
 
     // Initialize
@@ -141,43 +206,37 @@
       state.supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
       document.getElementById('kampusName').textContent = CONFIG.namaKampus;
       document.getElementById('radiusInfo').textContent = CONFIG.maxRadius + 'm';
-      log('App initialized');
       getLocation();
     })();
 
-    // Debug functions
-    function log(msg, type = 'info') {
-      const time = new Date().toLocaleTimeString();
-      const entry = `[${time}] ${msg}`;
-      state.logs.push(entry);
-      console.log(entry);
-      if (state.debugEnabled) {
-        const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#fff';
-        document.getElementById('debugLog').innerHTML += `<div style="color:${color}">${entry}</div>`;
-        document.getElementById('debugLog').scrollTop = 999999;
+    // Request Location Permission Manual
+    function requestLocationPermission() {
+      if (!navigator.geolocation) {
+        alert('Browser Anda tidak mendukung GPS.');
+        return;
       }
+      
+      document.getElementById('requestPermissionBtn').style.display = 'none';
+      state.permissionDenied = false;
+      
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          getLocation();
+        },
+        function(error) {
+          if (error.code === error.PERMISSION_DENIED) {
+            alert('Akses lokasi masih ditolak.\n\nCara mengizinkan:\n\n1. Tap icon 🔒 di address bar\n2. Cari "Location" atau "Lokasi"\n3. Ubah ke "Allow" atau "Izinkan"\n4. Refresh halaman ini');
+            document.getElementById('requestPermissionBtn').style.display = 'block';
+          } else {
+            getLocation();
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
     }
 
-    function toggleDebug() {
-      state.debugEnabled = !state.debugEnabled;
-      document.getElementById('debugPanel').style.display = state.debugEnabled ? 'block' : 'none';
-      if (state.debugEnabled) {
-        log('=== DEBUG ACTIVE ===', 'success');
-        log('Browser: ' + navigator.userAgent);
-        log('HTTPS: ' + (location.protocol === 'https:'));
-        log('GPS Support: ' + ('geolocation' in navigator));
-      }
-    }
-
-    function clearLog() {
-      document.getElementById('debugLog').innerHTML = '';
-      state.logs = [];
-      log('Cleared');
-    }
-
-    // Location functions
+    // Get Location
     function getLocation() {
-      log('Getting location...');
       const card = document.getElementById('locationCard');
       const title = document.getElementById('locationTitle');
       const details = document.getElementById('locationDetails');
@@ -185,7 +244,6 @@
       const alert = document.getElementById('alertBox');
 
       if (!navigator.geolocation) {
-        log('GPS not supported', 'error');
         card.className = 'location-card error';
         title.textContent = '❌ GPS Tidak Didukung';
         details.innerHTML = 'Browser tidak support GPS';
@@ -193,34 +251,27 @@
         return;
       }
 
-      log('GPS supported');
       card.className = 'location-card loading';
       title.textContent = '📍 Mengambil lokasi...';
       details.textContent = 'Mohon tunggu...';
       btn.disabled = true;
       alert.classList.remove('show');
+      document.getElementById('requestPermissionBtn').style.display = 'none';
 
       navigator.geolocation.getCurrentPosition(
         pos => {
-          log('GPS SUCCESS', 'success');
-          log(`Lat: ${pos.coords.latitude}`);
-          log(`Lng: ${pos.coords.longitude}`);
-          log(`Accuracy: ${pos.coords.accuracy}m`);
-
           state.userLat = pos.coords.latitude;
           state.userLng = pos.coords.longitude;
+          state.permissionDenied = false;
 
           const dist = calcDistance(CONFIG.kampusLat, CONFIG.kampusLng, state.userLat, state.userLng);
-          log(`Distance: ${Math.round(dist)}m`);
-
           state.isInRadius = dist <= CONFIG.maxRadius;
-          log(`In radius: ${state.isInRadius}`, state.isInRadius ? 'success' : 'error');
 
           card.className = 'location-card ' + (state.isInRadius ? 'success' : 'warning');
-          title.textContent = state.isInRadius ? '✅ Valid' : '⚠️ Diluar Radius';
+          title.textContent = state.isInRadius ? '✅ Lokasi Valid' : '⚠️ Diluar Radius';
           details.innerHTML = `
-            Lat: ${state.userLat.toFixed(6)}, Lng: ${state.userLng.toFixed(6)}<br>
-            Akurasi: ±${Math.round(pos.coords.accuracy)}m<br>
+            <strong>Koordinat:</strong> ${state.userLat.toFixed(6)}, ${state.userLng.toFixed(6)}<br>
+            <strong>Akurasi:</strong> ±${Math.round(pos.coords.accuracy)}m<br>
             <div class="distance-badge ${state.isInRadius ? 'valid' : 'invalid'}">
               ${Math.round(dist)}m ${state.isInRadius ? '✓' : '✗'}
             </div>
@@ -237,17 +288,16 @@
           }
         },
         err => {
-          log('GPS ERROR', 'error');
-          log(`Code: ${err.code}, Msg: ${err.message}`);
-
           card.className = 'location-card error';
           let errTitle = '', errMsg = '';
 
           if (err.code === 1) {
-            errTitle = '❌ Akses Ditolak';
-            errMsg = 'Izinkan akses lokasi di browser.<br><small>Tap 🔒 → Permissions → Location → Allow</small>';
+            state.permissionDenied = true;
+            errTitle = '❌ Akses Lokasi Ditolak';
+            errMsg = 'Anda menolak akses lokasi.<br><br><small>Klik tombol di bawah untuk memberikan izin akses lokasi.</small>';
+            document.getElementById('requestPermissionBtn').style.display = 'block';
           } else if (err.code === 2) {
-            errTitle = '❌ Tidak Tersedia';
+            errTitle = '❌ Lokasi Tidak Tersedia';
             errMsg = 'GPS tidak tersedia.<br><small>Aktifkan GPS & keluar ke area terbuka</small>';
           } else {
             errTitle = '⏱️ Timeout';
@@ -263,7 +313,6 @@
     }
 
     function refreshLocation() {
-      log('Refresh triggered');
       getLocation();
     }
 
@@ -278,29 +327,25 @@
       return R * c;
     }
 
-    // Form submit
+    // Form Submit
     document.getElementById('absensiForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      log('Form submit');
 
       if (!state.isInRadius) {
-        log('Rejected: out of radius', 'error');
-        showMsg('error', '❌ Diluar radius!');
+        showMsg('error', '❌ Anda berada diluar radius kampus!');
         return;
       }
 
       const nama = document.getElementById('nama').value.trim();
       const npm = document.getElementById('npm').value.trim();
+      const kelompok = document.getElementById('kelompok').value;
 
-      log(`Nama: ${nama}, NPM: ${npm}`);
-
-      if (!nama || !npm) {
-        showMsg('error', '❌ Isi semua field!');
+      if (!nama || !npm || !kelompok) {
+        showMsg('error', '❌ Semua field wajib diisi!');
         return;
       }
 
       // Check duplicate
-      log('Checking duplicate...');
       const today = new Date();
       today.setHours(0,0,0,0);
 
@@ -312,18 +357,14 @@
         .limit(1);
 
       if (dupErr) {
-        log('Check error: ' + dupErr.message, 'error');
         showMsg('error', '❌ Error: ' + dupErr.message);
         return;
       }
 
       if (dup && dup.length > 0) {
-        log('Duplicate found', 'error');
-        showMsg('error', '⚠️ Sudah absen hari ini!');
+        showMsg('error', '⚠️ Anda sudah melakukan absensi hari ini!');
         return;
       }
-
-      log('No duplicate, inserting...');
 
       const dist = calcDistance(CONFIG.kampusLat, CONFIG.kampusLng, state.userLat, state.userLng);
 
@@ -335,6 +376,7 @@
         .insert([{
           nama: nama,
           npm: npm,
+          kelompok: kelompok,
           status: 'HADIR',
           latitude: state.userLat,
           longitude: state.userLng,
@@ -346,30 +388,75 @@
       document.getElementById('loadingOverlay').classList.remove('show');
 
       if (error) {
-        log('Insert error: ' + error.message, 'error');
         showMsg('error', '❌ Gagal: ' + error.message);
         document.getElementById('submitBtn').disabled = false;
       } else {
-        log('SUCCESS!', 'success');
-        const ts = new Date(data[0].created_at);
-        showMsg('success', `
-          ✅ <strong>Berhasil!</strong><br>
-          <small>Nama: ${nama}</small><br>
-          <small>NPM: ${npm}</small><br>
-          <small>Jarak: ${data[0].jarak}m</small><br>
-          <small>Waktu: ${ts.toLocaleString('id-ID')}</small>
-        `);
-        document.getElementById('absensiForm').reset();
-        setTimeout(() => location.reload(), 3000);
+        // Show Success Modal
+        showSuccessModal(data[0], nama, npm, kelompok, dist);
       }
     });
+
+    function showSuccessModal(data, nama, npm, kelompok, distance) {
+      const timestamp = new Date(data.created_at);
+      const detailsHtml = `
+        <div class="row">
+          <span class="label">Nama:</span>
+          <span class="value">${nama}</span>
+        </div>
+        <div class="row">
+          <span class="label">NPM:</span>
+          <span class="value">${npm}</span>
+        </div>
+        <div class="row">
+          <span class="label">Kelompok:</span>
+          <span class="value">${kelompok}</span>
+        </div>
+        <div class="row">
+          <span class="label">Status:</span>
+          <span class="value">HADIR ✓</span>
+        </div>
+        <div class="row">
+          <span class="label">Jarak:</span>
+          <span class="value">${Math.round(distance)} meter</span>
+        </div>
+        <div class="row">
+          <span class="label">Waktu:</span>
+          <span class="value">${timestamp.toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}</span>
+        </div>
+      `;
+      
+      document.getElementById('successDetails').innerHTML = detailsHtml;
+      document.getElementById('successModal').classList.add('show');
+      
+      // Disable scroll
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').classList.remove('show');
+      document.body.style.overflow = 'auto';
+      
+      // Reset form
+      document.getElementById('absensiForm').reset();
+      
+      // Reload page after 500ms
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
 
     function showMsg(type, text) {
       const msg = document.getElementById('message');
       msg.className = 'message ' + type + ' show';
       msg.innerHTML = text;
       msg.scrollIntoView({ behavior: 'smooth' });
-      if (type === 'success') setTimeout(() => msg.classList.remove('show'), 5000);
+      setTimeout(() => msg.classList.remove('show'), 5000);
     }
   </script>
 </body>
