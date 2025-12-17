@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sistem Absensi Online Berbasis Lokasi GPS">
-  <meta name="theme-color" content="#667eea">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <title>Absensi Online - Sistem Berbasis Lokasi</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+  
+  <!-- Eruda Debug Tool -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>
+    if (window.location.href.indexOf('?debug') > -1) {
+      eruda.init();
+    }
+  </script>
+  
   <style>
     * {
       margin: 0;
@@ -126,11 +133,6 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     
-    input:disabled {
-      background: #f5f5f5;
-      cursor: not-allowed;
-    }
-    
     .location-card {
       background: #f8f9fa;
       border: 2px solid #e0e0e0;
@@ -242,10 +244,6 @@
     
     .btn-secondary:hover {
       background: #f5f5f5;
-    }
-    
-    .btn-secondary:active {
-      background: #eeeeee;
     }
     
     .message {
@@ -368,7 +366,8 @@
     <div class="content">
       <div class="info-box">
         <strong>ℹ️ Informasi:</strong><br>
-        Absensi otomatis tercatat sebagai <strong>HADIR</strong> jika Anda berada dalam radius <strong id="radiusInfo">200 meter</strong> dari kampus.
+        Absensi otomatis tercatat sebagai <strong>HADIR</strong> jika Anda berada dalam radius <strong id="radiusInfo">200 meter</strong> dari kampus.<br><br>
+        <small>💡 Tap tombol 🐛 di kanan bawah untuk debug info</small>
       </div>
       
       <div class="message" id="message"></div>
@@ -401,7 +400,7 @@
             pattern="[0-9]*"
             inputmode="numeric"
           >
-          <div class="help-text">Contoh: 231030003</div>
+          <div class="help-text">Contoh: 2106123456</div>
         </div>
         
         <div class="location-card" id="locationCard">
@@ -413,24 +412,6 @@
             Mohon izinkan akses lokasi pada browser Anda.
           </div>
         </div>
-
-        <div class="location-card" id="locationCard">
-  <!-- ... existing code ... -->
-</div>
-
-<!-- TAMBAHKAN INI -->
-<div id="permissionHelper" style="display: none; margin-bottom: 20px;">
-  <div style="background: #fff3cd; padding: 16px; border-radius: 8px; border-left: 4px solid #ff9800;">
-    <strong>⚠️ Akses Lokasi Dibutuhkan</strong><br>
-    <small>Klik tombol di bawah untuk memberikan izin akses lokasi:</small><br>
-    <button 
-      type="button" 
-      onclick="requestLocationPermission()" 
-      style="margin-top: 12px; width: 100%; padding: 12px; background: #ff9800; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-      📍 Izinkan Akses Lokasi
-    </button>
-  </div>
-</div>
         
         <div class="btn-group">
           <button type="button" class="btn-secondary" onclick="getLocation()">
@@ -454,325 +435,156 @@
       <div>Mengirim data...</div>
     </div>
   </div>
+  
+  <!-- Debug Panel -->
+  <div id="debugPanel" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #000; color: #0f0; padding: 16px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; z-index: 10000; border-top: 2px solid #0f0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: #fff;">
+      <strong>🐛 Debug Console</strong>
+      <button onclick="clearDebugLog()" style="background: #f00; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Clear</button>
+    </div>
+    <div id="debugLog"></div>
+  </div>
+  
+  <button id="debugToggle" onclick="toggleDebug()" style="position: fixed; bottom: 20px; right: 20px; background: #000; color: #0f0; border: 2px solid #0f0; padding: 12px; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    🐛
+  </button>
 
+  <!-- Load Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <script>
-    // ========================================
-// DEBUG TOOLS
-// ========================================
-let debugEnabled = true;
-let debugLogs = [];
-
-function log(message, type = 'info') {
-  const timestamp = new Date().toLocaleTimeString();
-  const logEntry = `[${timestamp}] ${message}`;
-  
-  debugLogs.push(logEntry);
-  
-  // Console log normal
-  console.log(logEntry);
-  
-  // Update debug panel
-  if (debugEnabled) {
-    const debugLog = document.getElementById('debugLog');
-    const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#fff';
-    debugLog.innerHTML += `<div style="color: ${color}; margin: 4px 0;">${logEntry}</div>`;
-    debugLog.scrollTop = debugLog.scrollHeight;
-  }
-}
-
-function toggleDebug() {
-  debugEnabled = !debugEnabled;
-  document.getElementById('debugPanel').style.display = debugEnabled ? 'block' : 'none';
-  
-  if (debugEnabled) {
-    log('Debug panel activated', 'success');
-    log('Browser: ' + navigator.userAgent);
-    log('HTTPS: ' + (window.location.protocol === 'https:'));
-    log('Geolocation Support: ' + ('geolocation' in navigator));
-  }
-}
-
-function clearDebugLog() {
-  document.getElementById('debugLog').innerHTML = '';
-  debugLogs = [];
-  log('Debug log cleared', 'info');
-}
-
-// ========================================
-// EXISTING CODE (dengan tambahan log)
-// ========================================
-
-window.onload = function() {
-  log('Page loaded');
-  log('Kampus: ' + NAMA_KAMPUS);
-  log('Max Radius: ' + MAX_RADIUS_METER + 'm');
-  
-  document.getElementById('kampusName').textContent = NAMA_KAMPUS;
-  document.getElementById('radiusInfo').textContent = MAX_RADIUS_METER + ' meter';
-  
-  getLocation();
-};
-
-function getLocation() {
-  log('getLocation() called');
-  
-  const locationCard = document.getElementById('locationCard');
-  const locationTitle = document.getElementById('locationTitle');
-  const locationDetails = document.getElementById('locationDetails');
-  const submitBtn = document.getElementById('submitBtn');
-  const alertBox = document.getElementById('alertBox');
-  
-  // Check geolocation support
-  if (!navigator.geolocation) {
-    log('Geolocation NOT supported', 'error');
-    locationCard.className = 'location-card error';
-    locationTitle.textContent = '❌ GPS Tidak Didukung';
-    locationDetails.innerHTML = `
-      Browser Anda tidak mendukung layanan lokasi.<br>
-      <small>Gunakan Chrome atau Safari versi terbaru.</small>
-    `;
-    submitBtn.disabled = true;
-    return;
-  }
-  
-  log('Geolocation supported ✓', 'success');
-  
-  // Check permission
-  if ('permissions' in navigator) {
-    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
-      log('Permission status: ' + result.state);
-    });
-  }
-  
-  locationCard.className = 'location-card loading';
-  locationTitle.textContent = '📍 Mengambil lokasi...';
-  locationDetails.innerHTML = `
-    Mohon tunggu...<br>
-    <small>Tap tombol 🐛 di kanan bawah untuk debug info</small>
-  `;
-  submitBtn.disabled = true;
-  alertBox.classList.remove('show');
-  
-  log('Requesting geolocation...');
-  
-  const options = {
-    enableHighAccuracy: true,
-    timeout: 15000,
-    maximumAge: 0
-  };
-  
-  log('Options: ' + JSON.stringify(options));
-  
-  navigator.geolocation.getCurrentPosition(
-    // Success
-    function(position) {
-      log('GPS Success! ✓', 'success');
-      log('Latitude: ' + position.coords.latitude);
-      log('Longitude: ' + position.coords.longitude);
-      log('Accuracy: ' + position.coords.accuracy + 'm');
-      
-      userLocation.latitude = position.coords.latitude;
-      userLocation.longitude = position.coords.longitude;
-      
-      const distance = calculateDistance(
-        KAMPUS_LATITUDE,
-        KAMPUS_LONGITUDE,
-        userLocation.latitude,
-        userLocation.longitude
-      );
-      
-      log('Distance calculated: ' + Math.round(distance) + 'm');
-      
-      isInRadius = distance <= MAX_RADIUS_METER;
-      
-      log('In radius: ' + isInRadius, isInRadius ? 'success' : 'error');
-      
-      locationCard.className = 'location-card ' + (isInRadius ? 'success' : 'warning');
-      locationTitle.textContent = isInRadius ? '✅ Lokasi Valid' : '⚠️ Diluar Radius';
-      
-      locationDetails.innerHTML = `
-        <strong>Koordinat:</strong> ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}<br>
-        <strong>Akurasi:</strong> ±${Math.round(position.coords.accuracy)}m<br>
-        <strong>Jarak dari Kampus:</strong>
-        <div class="distance-badge ${isInRadius ? 'valid' : 'invalid'}">
-          ${Math.round(distance)} meter ${isInRadius ? '✓' : '✗'}
-        </div>
-      `;
-      
-      if (isInRadius) {
-        submitBtn.disabled = false;
-        document.getElementById('submitText').textContent = 'Submit Absensi';
-      } else {
-        submitBtn.disabled = true;
-        document.getElementById('submitText').textContent = 'Diluar Jangkauan';
-        document.getElementById('alertText').innerHTML = `
-          Anda berada <strong>${Math.round(distance)}m</strong> dari kampus.<br>
-          Maksimal ${MAX_RADIUS_METER}m.
-        `;
-        alertBox.classList.add('show');
-      }
-    },
-    
-    // Error
-    function(error) {
-      log('GPS Error! ✗', 'error');
-      log('Error code: ' + error.code);
-      log('Error message: ' + error.message);
-      
-      locationCard.className = 'location-card error';
-      
-      let errorTitle = '';
-      let errorMsg = '';
-      
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          log('PERMISSION_DENIED', 'error');
-          errorTitle = '❌ Akses Lokasi Ditolak';
-          errorMsg = `
-            Anda menolak akses lokasi.<br><br>
-            <strong>Cara Mengizinkan:</strong><br>
-            <small>
-            1. Tap icon 🔒 di address bar<br>
-            2. Tap "Permissions" atau "Site settings"<br>
-            3. Location → Allow<br>
-            4. Refresh halaman
-            </small>
-          `;
-          break;
-          
-        case error.POSITION_UNAVAILABLE:
-          log('POSITION_UNAVAILABLE', 'error');
-          errorTitle = '❌ Lokasi Tidak Tersedia';
-          errorMsg = `
-            GPS tidak dapat menentukan lokasi.<br><br>
-            <strong>Solusi:</strong><br>
-            <small>
-            • Pastikan GPS aktif (Settings → Location)<br>
-            • Keluar ke area terbuka<br>
-            • Tunggu 30 detik lalu Refresh<br>
-            • Cek debug log (tombol 🐛)
-            </small>
-          `;
-          break;
-          
-        case error.TIMEOUT:
-          log('TIMEOUT', 'error');
-          errorTitle = '⏱️ Timeout';
-          errorMsg = `
-            Waktu habis saat mencari lokasi.<br><br>
-            <strong>Solusi:</strong><br>
-            <small>
-            • Pastikan internet aktif<br>
-            • GPS signal lemah - keluar ke area terbuka<br>
-            • Klik "Refresh Lokasi"<br>
-            • Lihat debug log (tombol 🐛)
-            </small>
-          `;
-          break;
-      }
-      
-      locationTitle.textContent = errorTitle;
-      locationDetails.innerHTML = errorMsg;
-      submitBtn.disabled = true;
-    },
-    
-    options
-  );
-}
-
-// Log saat submit
-document.getElementById('absensiForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  log('Form submitted');
-  log('Nama: ' + document.getElementById('nama').value);
-  log('NPM: ' + document.getElementById('npm').value);
-  
-  // ... existing submit code ...
-});
     // ========================================
     // KONFIGURASI - GANTI DENGAN DATA ANDA
     // ========================================
-    const SUPABASE_URL = 'https://dgcislmedkwmercjffoz.supabase.co'; // ← GANTI INI
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ'; // ← GANTI INI
+    const SUPABASE_URL = 'https://dgcislmedkwmercjffoz.supabase.co'; // ← GANTI
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ'; // ← GANTI
     
-    const KAMPUS_LATITUDE = 1.054548;  // ← GANTI dengan latitude kampus
-    const KAMPUS_LONGITUDE = 104.039517; // ← GANTI dengan longitude kampus
+    const KAMPUS_LATITUDE = -6.2088;  // ← GANTI
+    const KAMPUS_LONGITUDE = 106.8456; // ← GANTI
     const MAX_RADIUS_METER = 200;
-    const NAMA_KAMPUS = 'Universitas Riau Kepulauan'; // ← GANTI nama kampus
+    const NAMA_KAMPUS = 'Universitas Indonesia'; // ← GANTI
+    
     // ========================================
-    const TESTING_MODE = true; // Ubah jadi true untuk testing
-    const TEST_LOCATION = {
-    latitude: KAMPUS_LATITUDE + 0.0001, // ~11 meter dari kampus
-    longitude: KAMPUS_LONGITUDE + 0.0001
-    };
-    // Initialize Supabase
+    // INITIALIZE SUPABASE (HANYA 1X!)
+    // ========================================
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
+    // ========================================
+    // GLOBAL VARIABLES
+    // ========================================
     let userLocation = {
       latitude: null,
       longitude: null
     };
     
     let isInRadius = false;
+    let debugEnabled = true; //awalnya false
+    let debugLogs = [];
 
+    // ========================================
+    // DEBUG FUNCTIONS
+    // ========================================
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = `[${timestamp}] ${message}`;
+      
+      debugLogs.push(logEntry);
+      console.log(logEntry);
+      
+      if (debugEnabled) {
+        const debugLog = document.getElementById('debugLog');
+        const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#fff';
+        debugLog.innerHTML += `<div style="color: ${color}; margin: 4px 0;">${logEntry}</div>`;
+        debugLog.scrollTop = debugLog.scrollHeight;
+      }
+    }
+
+    function toggleDebug() {
+      debugEnabled = !debugEnabled;
+      document.getElementById('debugPanel').style.display = debugEnabled ? 'block' : 'none';
+      
+      if (debugEnabled) {
+        log('=== DEBUG PANEL ACTIVATED ===', 'success');
+        log('Browser: ' + navigator.userAgent);
+        log('HTTPS: ' + (window.location.protocol === 'https:'));
+        log('Geolocation Support: ' + ('geolocation' in navigator));
+        log('Kampus: ' + NAMA_KAMPUS);
+        log('Kampus Coords: ' + KAMPUS_LATITUDE + ', ' + KAMPUS_LONGITUDE);
+        log('Max Radius: ' + MAX_RADIUS_METER + 'm');
+      }
+    }
+
+    function clearDebugLog() {
+      document.getElementById('debugLog').innerHTML = '';
+      debugLogs = [];
+      log('Debug log cleared', 'info');
+    }
+
+    // ========================================
+    // MAIN FUNCTIONS
+    // ========================================
     window.onload = function() {
+      log('Page loaded');
+      
       document.getElementById('kampusName').textContent = NAMA_KAMPUS;
       document.getElementById('radiusInfo').textContent = MAX_RADIUS_METER + ' meter';
+      
       getLocation();
     };
 
     function getLocation() {
-
-      // TAMBAHKAN INI di awal fungsi
-  if (TESTING_MODE) {
-    console.log('⚠️ TESTING MODE ACTIVE');
-    userLocation.latitude = TEST_LOCATION.latitude;
-    userLocation.longitude = TEST_LOCATION.longitude;
-    
-    const distance = calculateDistance(
-      KAMPUS_LATITUDE,
-      KAMPUS_LONGITUDE,
-      userLocation.latitude,
-      userLocation.longitude
-    );
-    
-    isInRadius = distance <= MAX_RADIUS_METER;
-    
-    locationCard.className = 'location-card success';
-    locationTitle.textContent = '🧪 TESTING MODE - Lokasi Simulasi';
-    locationDetails.innerHTML = `
-      <strong>Koordinat Test:</strong><br>
-      Lat: ${userLocation.latitude}<br>
-      Lng: ${userLocation.longitude}<br>
-      Jarak: ${Math.round(distance)}m
-    `;
-    
-    submitBtn.disabled = false;
-    return;
-  }
+      log('getLocation() called');
+      
       const locationCard = document.getElementById('locationCard');
       const locationTitle = document.getElementById('locationTitle');
       const locationDetails = document.getElementById('locationDetails');
       const submitBtn = document.getElementById('submitBtn');
       const alertBox = document.getElementById('alertBox');
       
-      locationCard.className = 'location-card loading';
-      locationTitle.textContent = 'Mengambil lokasi...';
-      locationDetails.textContent = 'Mohon tunggu...';
-      submitBtn.disabled = true;
-      alertBox.classList.remove('show');
-      
       if (!navigator.geolocation) {
+        log('Geolocation NOT supported', 'error');
         locationCard.className = 'location-card error';
         locationTitle.textContent = '❌ GPS Tidak Didukung';
-        locationDetails.textContent = 'Browser Anda tidak mendukung layanan lokasi.';
+        locationDetails.innerHTML = 'Browser Anda tidak mendukung layanan lokasi.<br><small>Gunakan Chrome atau Safari.</small>';
+        submitBtn.disabled = true;
         return;
       }
       
+      log('Geolocation supported ✓', 'success');
+      
+      // Check permission
+      if ('permissions' in navigator) {
+        navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+          log('Permission status: ' + result.state);
+        }).catch(function(err) {
+          log('Permission check error: ' + err.message, 'error');
+        });
+      }
+      
+      locationCard.className = 'location-card loading';
+      locationTitle.textContent = '📍 Mengambil lokasi...';
+      locationDetails.innerHTML = 'Mohon tunggu...<br><small>Tap 🐛 untuk debug info</small>';
+      submitBtn.disabled = true;
+      alertBox.classList.remove('show');
+      
+      log('Requesting geolocation...');
+      
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      };
+      
+      log('Options: ' + JSON.stringify(options));
+      
       navigator.geolocation.getCurrentPosition(
+        // Success
         function(position) {
+          log('=== GPS SUCCESS ===', 'success');
+          log('Latitude: ' + position.coords.latitude);
+          log('Longitude: ' + position.coords.longitude);
+          log('Accuracy: ' + position.coords.accuracy + 'm');
+          
           userLocation.latitude = position.coords.latitude;
           userLocation.longitude = position.coords.longitude;
           
@@ -783,20 +595,21 @@ document.getElementById('absensiForm').addEventListener('submit', async function
             userLocation.longitude
           );
           
+          log('Distance: ' + Math.round(distance) + 'm');
+          
           isInRadius = distance <= MAX_RADIUS_METER;
           
+          log('In radius: ' + isInRadius, isInRadius ? 'success' : 'error');
+          
           locationCard.className = 'location-card ' + (isInRadius ? 'success' : 'warning');
-          locationTitle.textContent = isInRadius ? '✅ Lokasi Valid - Dalam Radius' : '⚠️ Lokasi Terdeteksi - Diluar Radius';
+          locationTitle.textContent = isInRadius ? '✅ Lokasi Valid' : '⚠️ Diluar Radius';
           
           locationDetails.innerHTML = `
-            <strong>Koordinat Anda:</strong><br>
-            Latitude: ${userLocation.latitude.toFixed(6)}<br>
-            Longitude: ${userLocation.longitude.toFixed(6)}
-            <div style="margin-top: 12px;">
-              <strong>Jarak dari Kampus:</strong>
-              <div class="distance-badge ${isInRadius ? 'valid' : 'invalid'}">
-                ${Math.round(distance)} meter ${isInRadius ? '✓' : '✗'}
-              </div>
+            <strong>Koordinat:</strong> ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}<br>
+            <strong>Akurasi:</strong> ±${Math.round(position.coords.accuracy)}m<br>
+            <strong>Jarak:</strong>
+            <div class="distance-badge ${isInRadius ? 'valid' : 'invalid'}">
+              ${Math.round(distance)} meter ${isInRadius ? '✓' : '✗'}
             </div>
           `;
           
@@ -807,13 +620,19 @@ document.getElementById('absensiForm').addEventListener('submit', async function
             submitBtn.disabled = true;
             document.getElementById('submitText').textContent = 'Diluar Jangkauan';
             document.getElementById('alertText').innerHTML = `
-              Anda berada <strong>${Math.round(distance)} meter</strong> dari kampus.<br>
-              Silakan mendekati kampus (maksimal ${MAX_RADIUS_METER}m dari kampus).
+              Anda berada <strong>${Math.round(distance)}m</strong> dari kampus.<br>
+              Maksimal ${MAX_RADIUS_METER}m.
             `;
             alertBox.classList.add('show');
           }
         },
+        
+        // Error
         function(error) {
+          log('=== GPS ERROR ===', 'error');
+          log('Error code: ' + error.code);
+          log('Error message: ' + error.message);
+          
           locationCard.className = 'location-card error';
           
           let errorTitle = '';
@@ -821,36 +640,59 @@ document.getElementById('absensiForm').addEventListener('submit', async function
           
           switch(error.code) {
             case error.PERMISSION_DENIED:
+              log('PERMISSION_DENIED', 'error');
               errorTitle = '❌ Akses Lokasi Ditolak';
-              errorMsg = 'Silakan izinkan akses lokasi di pengaturan browser, lalu klik "Refresh Lokasi".';
+              errorMsg = `
+                Anda menolak akses lokasi.<br><br>
+                <strong>Cara Mengizinkan:</strong><br>
+                <small>
+                1. Tap 🔒 di address bar<br>
+                2. Permissions → Location → Allow<br>
+                3. Refresh halaman
+                </small>
+              `;
               break;
+              
             case error.POSITION_UNAVAILABLE:
+              log('POSITION_UNAVAILABLE', 'error');
               errorTitle = '❌ Lokasi Tidak Tersedia';
-              errorMsg = 'Informasi lokasi tidak tersedia. Pastikan GPS aktif dan Anda berada di area terbuka.';
+              errorMsg = `
+                GPS tidak dapat menentukan lokasi.<br><br>
+                <strong>Solusi:</strong><br>
+                <small>
+                • Aktifkan GPS (Settings → Location)<br>
+                • Keluar ke area terbuka<br>
+                • Klik Refresh Lokasi
+                </small>
+              `;
               break;
+              
             case error.TIMEOUT:
-              errorTitle = '❌ Timeout';
-              errorMsg = 'Waktu habis saat mengambil lokasi. Silakan coba lagi.';
+              log('TIMEOUT', 'error');
+              errorTitle = '⏱️ Timeout';
+              errorMsg = `
+                Waktu habis.<br><br>
+                <strong>Solusi:</strong><br>
+                <small>
+                • Pastikan internet aktif<br>
+                • Keluar ke area terbuka<br>
+                • Klik Refresh Lokasi
+                </small>
+              `;
               break;
-            default:
-              errorTitle = '❌ Error';
-              errorMsg = 'Terjadi kesalahan yang tidak diketahui.';
           }
           
           locationTitle.textContent = errorTitle;
           locationDetails.innerHTML = errorMsg;
           submitBtn.disabled = true;
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
+        
+        options
       );
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // Radius bumi dalam meter
+      const R = 6371e3;
       const φ1 = lat1 * Math.PI / 180;
       const φ2 = lat2 * Math.PI / 180;
       const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -867,20 +709,28 @@ document.getElementById('absensiForm').addEventListener('submit', async function
     document.getElementById('absensiForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      log('Form submitted');
+      
       if (!isInRadius) {
-        showMessage('error', '❌ Anda berada diluar radius kampus! Tidak dapat melakukan absensi.');
+        log('Rejected: Out of radius', 'error');
+        showMessage('error', '❌ Anda berada diluar radius kampus!');
         return;
       }
       
       const nama = document.getElementById('nama').value.trim();
       const npm = document.getElementById('npm').value.trim();
       
+      log('Nama: ' + nama);
+      log('NPM: ' + npm);
+      
       if (!nama || !npm) {
+        log('Validation failed: Empty fields', 'error');
         showMessage('error', '❌ Nama dan NPM wajib diisi!');
         return;
       }
       
-      // Cek duplikasi hari ini
+      // Cek duplikasi
+      log('Checking duplicate...');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -892,15 +742,18 @@ document.getElementById('absensiForm').addEventListener('submit', async function
         .limit(1);
       
       if (checkError) {
-        showMessage('error', '❌ Error memeriksa data: ' + checkError.message);
+        log('Check error: ' + checkError.message, 'error');
+        showMessage('error', '❌ Error: ' + checkError.message);
         return;
       }
       
       if (existing && existing.length > 0) {
-        const existingTime = new Date(existing[0].created_at);
-        showMessage('error', `⚠️ Anda sudah melakukan absensi hari ini!<br><small>Waktu: ${existingTime.toLocaleString('id-ID')}</small>`);
+        log('Duplicate found', 'error');
+        showMessage('error', '⚠️ Anda sudah absen hari ini!');
         return;
       }
+      
+      log('No duplicate, proceeding...');
       
       const distance = calculateDistance(
         KAMPUS_LATITUDE,
@@ -909,13 +762,11 @@ document.getElementById('absensiForm').addEventListener('submit', async function
         userLocation.longitude
       );
       
-      // Disable form
       document.getElementById('loadingOverlay').classList.add('show');
       document.getElementById('submitBtn').disabled = true;
-      document.getElementById('nama').disabled = true;
-      document.getElementById('npm').disabled = true;
       
-      // Insert data
+      log('Inserting to database...');
+      
       const { data, error } = await supabase
         .from('absensi')
         .insert([
@@ -934,25 +785,26 @@ document.getElementById('absensiForm').addEventListener('submit', async function
       document.getElementById('loadingOverlay').classList.remove('show');
       
       if (error) {
-        showMessage('error', '❌ Gagal menyimpan data: ' + error.message);
+        log('Insert error: ' + error.message, 'error');
+        showMessage('error', '❌ Gagal: ' + error.message);
         document.getElementById('submitBtn').disabled = false;
-        document.getElementById('nama').disabled = false;
-        document.getElementById('npm').disabled = false;
       } else {
+        log('=== SUCCESS ===', 'success');
+        log('Data inserted: ' + JSON.stringify(data[0]));
+        
         const timestamp = new Date(data[0].created_at);
         showMessage('success', `
-          ✅ <strong>Absensi berhasil dicatat!</strong><br><br>
+          ✅ <strong>Absensi berhasil!</strong><br><br>
           <small><strong>Nama:</strong> ${nama}</small><br>
           <small><strong>NPM:</strong> ${npm}</small><br>
           <small><strong>Status:</strong> HADIR</small><br>
-          <small><strong>Jarak:</strong> ${data[0].jarak} meter dari kampus</small><br>
+          <small><strong>Jarak:</strong> ${data[0].jarak}m</small><br>
           <small><strong>Waktu:</strong> ${timestamp.toLocaleString('id-ID')}</small>
         `);
         
         document.getElementById('absensiForm').reset();
-        document.getElementById('submitText').textContent = 'Berhasil Absen ✓';
+        document.getElementById('submitText').textContent = 'Berhasil ✓';
         
-        // Reload setelah 3 detik
         setTimeout(() => {
           window.location.reload();
         }, 3000);
@@ -963,68 +815,14 @@ document.getElementById('absensiForm').addEventListener('submit', async function
       const message = document.getElementById('message');
       message.className = 'message ' + type + ' show';
       message.innerHTML = text;
-      
       message.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       
-      // Auto hide untuk success setelah 5 detik
       if (type === 'success') {
         setTimeout(() => {
           message.classList.remove('show');
         }, 5000);
       }
     }
-
-    // Prevent accidental page close
-    window.addEventListener('beforeunload', function (e) {
-      if (document.getElementById('loadingOverlay').classList.contains('show')) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
-
-    function requestLocationPermission() {
-  if (!navigator.geolocation) {
-    alert('Browser Anda tidak mendukung GPS.');
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
-      document.getElementById('permissionHelper').style.display = 'none';
-      getLocation();
-    },
-    function(error) {
-      if (error.code === error.PERMISSION_DENIED) {
-        alert('Akses lokasi ditolak.\n\nCara mengizinkan:\n1. Buka Settings HP\n2. Apps → Browser\n3. Permissions → Location → Allow');
-      }
-    }
-  );
-}
-
-// Tampilkan helper jika permission denied
-function getLocation() {
-  // ... existing code ...
-
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
-      // ... existing success code ...
-    },
-    function(error) {
-      // ... existing error code ...
-
-      // TAMBAHKAN INI
-      if (error.code === error.PERMISSION_DENIED) {
-        document.getElementById('permissionHelper').style.display = 'block';
-      }
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    }
-  );
-}
-
   </script>
 </body>
 </html>
