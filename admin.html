@@ -13,13 +13,135 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      background: #f5f7fa;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
+    }
+    
+    /* Login Form Styles */
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .login-container h1 {
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+    
+    .login-container p {
+      color: #666;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    
+    .login-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-login:active {
+      transform: translateY(0);
+    }
+    
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      border: 1px solid #ef5350;
+    }
+    
+    .error-message.show {
+      display: block;
+      animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    
+    /* Dashboard Styles */
+    .dashboard {
+      display: none;
+      background: #f5f7fa;
+      min-height: 100vh;
+      padding: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+    
+    .dashboard.active {
+      display: block;
     }
     
     .container {
       max-width: 1400px;
-      margin: 0 auto;
+      margin: 20px auto;
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -30,16 +152,35 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 24px;
       color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
-    .header h1 {
+    .header-left h1 {
       font-size: 24px;
       margin-bottom: 4px;
     }
     
-    .header p {
+    .header-left p {
       font-size: 14px;
       opacity: 0.9;
+    }
+    
+    .btn-logout {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .btn-logout:hover {
+      background: rgba(255,255,255,0.3);
     }
     
     .controls {
@@ -184,6 +325,12 @@
     }
     
     @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+      
       .controls {
         flex-direction: column;
       }
@@ -195,88 +342,180 @@
       .stats {
         grid-template-columns: 1fr;
       }
+      
+      .login-container {
+        padding: 24px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>📊 Dashboard Admin - Data Absensi</h1>
-      <p>Monitoring dan Export Data Kehadiran</p>
+  <!-- Login Form -->
+  <div class="login-container" id="loginContainer">
+    <div class="login-icon">🔐</div>
+    <h1>Admin Login</h1>
+    <p>Masukkan password untuk mengakses dashboard</p>
+    
+    <div class="error-message" id="errorMessage">
+      ❌ Password salah! Silakan coba lagi.
     </div>
     
-    <div class="controls">
-      <input 
-        type="text" 
-        id="searchInput" 
-        placeholder="🔍 Cari nama atau NPM..."
-        onkeyup="filterTable()"
-      >
-      <button onclick="loadData()">🔄 Refresh</button>
-      <button onclick="exportCSV()">📥 Export CSV</button>
-      <button onclick="exportExcel()">📊 Export Excel</button>
-    </div>
-    
-    <div class="stats" id="stats" style="display: none;">
-      <div class="stat-card">
-        <h3>Total Absensi</h3>
-        <p id="totalAbsensi">0</p>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Password</label>
+        <input 
+          type="password" 
+          id="passwordInput" 
+          placeholder="Masukkan password admin"
+          required
+          autocomplete="off"
+        >
       </div>
-      <div class="stat-card">
-        <h3>Hari Ini</h3>
-        <p id="todayAbsensi">0</p>
+      
+      <button type="submit" class="btn-login">
+        🔓 Login
+      </button>
+    </form>
+  </div>
+
+  <!-- Dashboard (Hidden by default) -->
+  <div class="dashboard" id="dashboard">
+    <div class="container">
+      <div class="header">
+        <div class="header-left">
+          <h1>📊 Dashboard Admin - Data Absensi</h1>
+          <p>Monitoring dan Export Data Kehadiran</p>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+          🚪 Logout
+        </button>
       </div>
-      <div class="stat-card">
-        <h3>Minggu Ini</h3>
-        <p id="weekAbsensi">0</p>
+      
+      <div class="controls">
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="🔍 Cari nama atau NPM..."
+          onkeyup="filterTable()"
+        >
+        <button onclick="loadData()">🔄 Refresh</button>
+        <button onclick="exportCSV()">📥 Export CSV</button>
+        <button onclick="exportExcel()">📊 Export Excel</button>
       </div>
-      <div class="stat-card">
-        <h3>Bulan Ini</h3>
-        <p id="monthAbsensi">0</p>
+      
+      <div class="stats" id="stats" style="display: none;">
+        <div class="stat-card">
+          <h3>Total Absensi</h3>
+          <p id="totalAbsensi">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Hari Ini</h3>
+          <p id="todayAbsensi">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Minggu Ini</h3>
+          <p id="weekAbsensi">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Bulan Ini</h3>
+          <p id="monthAbsensi">0</p>
+        </div>
       </div>
-    </div>
-    
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <div>Memuat data...</div>
-    </div>
-    
-    <div class="table-container" id="tableContainer" style="display: none;">
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Tanggal/Waktu</th>
-            <th>Nama</th>
-            <th>NPM</th>
-            <th>Status</th>
-            <th>Jarak (m)</th>
-            <th>Koordinat</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-    
-    <div id="noData" class="no-data" style="display: none;">
-      <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
-      <div>Belum ada data absensi</div>
+      
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div>Memuat data...</div>
+      </div>
+      
+      <div class="table-container" id="tableContainer" style="display: none;">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal/Waktu</th>
+              <th>Nama</th>
+              <th>NPM</th>
+              <th>Status</th>
+              <th>Jarak (m)</th>
+              <th>Koordinat</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      
+      <div id="noData" class="no-data" style="display: none;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+        <div>Belum ada data absensi</div>
+      </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script>
-    // GANTI DENGAN DATA ANDA
+    // ========================================
+    // KONFIGURASI - GANTI DENGAN DATA ANDA
+    // ========================================
     const SUPABASE_URL = 'https://dgcislmedkwmercjffoz.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ';
     
+    // PASSWORD ADMIN (Ganti dengan password Anda)
+    // Password ini di-hash untuk keamanan
+    const ADMIN_PASSWORD_HASH = CryptoJS.SHA256('admin123').toString();
+    // Untuk ganti password, ganti 'admin123' dengan password baru Anda
+    // ========================================
+    
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let allData = [];
-
+    
+    // Cek apakah sudah login
     window.onload = function() {
-      loadData();
+      const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+      if (isLoggedIn === 'true') {
+        showDashboard();
+        loadData();
+      }
     };
+    
+    // Handle login
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const password = document.getElementById('passwordInput').value;
+      const passwordHash = CryptoJS.SHA256(password).toString();
+      
+      if (passwordHash === ADMIN_PASSWORD_HASH) {
+        // Login berhasil
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        showDashboard();
+        loadData();
+      } else {
+        // Login gagal
+        document.getElementById('errorMessage').classList.add('show');
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+        
+        setTimeout(() => {
+          document.getElementById('errorMessage').classList.remove('show');
+        }, 3000);
+      }
+    });
+    
+    function showDashboard() {
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('dashboard').classList.add('active');
+      document.body.style.padding = '0';
+      document.body.style.background = '#f5f7fa';
+    }
+    
+    function logout() {
+      if (confirm('Yakin ingin logout?')) {
+        sessionStorage.removeItem('adminLoggedIn');
+        location.reload();
+      }
+    }
 
     async function loadData() {
       document.getElementById('loading').style.display = 'block';
@@ -403,7 +642,6 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(ws_data);
       
-      // Auto width
       const colWidths = [
         { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
         { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
@@ -413,6 +651,13 @@
       XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
       XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
+    
+    // Prevent back button after logout
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
   </script>
 </body>
 </html>
