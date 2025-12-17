@@ -458,48 +458,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
 
-    function requestLocationPermission() {
-  if (!navigator.geolocation) {
-    alert('Browser Anda tidak mendukung GPS.');
-    return;
-  }
-  
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
-      document.getElementById('permissionHelper').style.display = 'none';
-      getLocation();
-    },
-    function(error) {
-      if (error.code === error.PERMISSION_DENIED) {
-        alert('Akses lokasi ditolak.\n\nCara mengizinkan:\n1. Buka Settings HP\n2. Apps → Browser\n3. Permissions → Location → Allow');
-      }
-    }
-  );
-}
-
-// Tampilkan helper jika permission denied
-function getLocation() {
-  // ... existing code ...
-  
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
-      // ... existing success code ...
-    },
-    function(error) {
-      // ... existing error code ...
-      
-      // TAMBAHKAN INI
-      if (error.code === error.PERMISSION_DENIED) {
-        document.getElementById('permissionHelper').style.display = 'block';
-      }
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    }
-  );
-}
     // ========================================
     // KONFIGURASI - GANTI DENGAN DATA ANDA
     // ========================================
@@ -758,6 +716,50 @@ function getLocation() {
         e.returnValue = '';
       }
     });
+
+    function requestLocationPermission() {
+  if (!navigator.geolocation) {
+    alert('Browser Anda tidak mendukung GPS.');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      document.getElementById('permissionHelper').style.display = 'none';
+      getLocation();
+    },
+    function(error) {
+      if (error.code === error.PERMISSION_DENIED) {
+        alert('Akses lokasi ditolak.\n\nCara mengizinkan:\n1. Buka Settings HP\n2. Apps → Browser\n3. Permissions → Location → Allow');
+      }
+    }
+  );
+}
+
+// Tampilkan helper jika permission denied
+function getLocation() {
+  // ... existing code ...
+
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      // ... existing success code ...
+    },
+    function(error) {
+      // ... existing error code ...
+
+      // TAMBAHKAN INI
+      if (error.code === error.PERMISSION_DENIED) {
+        document.getElementById('permissionHelper').style.display = 'block';
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
   </script>
 </body>
 </html>
