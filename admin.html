@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Data Absensi</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px;
+      color: white;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .controls {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .controls input {
+      padding: 10px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .controls input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    button {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .stats {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .stat-card {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .stat-card h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card p {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      padding: 20px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 14px;
+    }
+    
+    th {
+      background: #f8f9fa;
+      color: #333;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .no-data {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge-success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+      }
+      
+      .controls input {
+        width: 100%;
+      }
+      
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Dashboard Admin - Data Absensi</h1>
+      <p>Monitoring dan Export Data Kehadiran</p>
+    </div>
+    
+    <div class="controls">
+      <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="🔍 Cari nama atau NPM..."
+        onkeyup="filterTable()"
+      >
+      <button onclick="loadData()">🔄 Refresh</button>
+      <button onclick="exportCSV()">📥 Export CSV</button>
+      <button onclick="exportExcel()">📊 Export Excel</button>
+    </div>
+    
+    <div class="stats" id="stats" style="display: none;">
+      <div class="stat-card">
+        <h3>Total Absensi</h3>
+        <p id="totalAbsensi">0</p>
+      </div>
+      <div class="stat-card">
+        <h3>Hari Ini</h3>
+        <p id="todayAbsensi">0</p>
+      </div>
+      <div class="stat-card">
+        <h3>Minggu Ini</h3>
+        <p id="weekAbsensi">0</p>
+      </div>
+      <div class="stat-card">
+        <h3>Bulan Ini</h3>
+        <p id="monthAbsensi">0</p>
+      </div>
+    </div>
+    
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <div>Memuat data...</div>
+    </div>
+    
+    <div class="table-container" id="tableContainer" style="display: none;">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal/Waktu</th>
+            <th>Nama</th>
+            <th>NPM</th>
+            <th>Status</th>
+            <th>Jarak (m)</th>
+            <th>Koordinat</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    
+    <div id="noData" class="no-data" style="display: none;">
+      <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+      <div>Belum ada data absensi</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    // GANTI DENGAN DATA ANDA
+    const SUPABASE_URL = 'https://dgcislmedkwmercjffoz.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let allData = [];
+
+    window.onload = function() {
+      loadData();
+    };
+
+    async function loadData() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('tableContainer').style.display = 'none';
+      document.getElementById('noData').style.display = 'none';
+      document.getElementById('stats').style.display = 'none';
+      
+      const { data, error } = await supabase
+        .from('absensi')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        alert('Error: ' + error.message);
+        document.getElementById('loading').style.display = 'none';
+        return;
+      }
+      
+      allData = data;
+      
+      if (data.length === 0) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('noData').style.display = 'block';
+        return;
+      }
+      
+      calculateStats(data);
+      displayData(data);
+    }
+
+    function calculateStats(data) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      const todayCount = data.filter(d => new Date(d.created_at) >= today).length;
+      const weekCount = data.filter(d => new Date(d.created_at) >= weekAgo).length;
+      const monthCount = data.filter(d => new Date(d.created_at) >= monthAgo).length;
+      
+      document.getElementById('totalAbsensi').textContent = data.length;
+      document.getElementById('todayAbsensi').textContent = todayCount;
+      document.getElementById('weekAbsensi').textContent = weekCount;
+      document.getElementById('monthAbsensi').textContent = monthCount;
+      
+      document.getElementById('stats').style.display = 'grid';
+    }
+
+    function displayData(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      data.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        const date = new Date(row.created_at);
+        
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${date.toLocaleString('id-ID', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}</td>
+          <td><strong>${row.nama}</strong></td>
+          <td>${row.npm}</td>
+          <td><span class="badge badge-success">${row.status}</span></td>
+          <td>${row.jarak}m</td>
+          <td><small>${row.alamat}</small></td>
+        `;
+        
+        tbody.appendChild(tr);
+      });
+      
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('tableContainer').style.display = 'block';
+    }
+
+    function filterTable() {
+      const input = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allData.filter(row => 
+        row.nama.toLowerCase().includes(input) || 
+        row.npm.toLowerCase().includes(input)
+      );
+      displayData(filtered);
+    }
+
+    function exportCSV() {
+      let csv = 'No,Tanggal/Waktu,Nama,NPM,Status,Jarak (m),Latitude,Longitude\n';
+      
+      allData.forEach((row, index) => {
+        const date = new Date(row.created_at).toLocaleString('id-ID');
+        csv += `${index + 1},"${date}","${row.nama}","${row.npm}","${row.status}",${row.jarak},${row.latitude},${row.longitude}\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    function exportExcel() {
+      const ws_data = [
+        ['No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Status', 'Jarak (m)', 'Latitude', 'Longitude']
+      ];
+      
+      allData.forEach((row, index) => {
+        ws_data.push([
+          index + 1,
+          new Date(row.created_at).toLocaleString('id-ID'),
+          row.nama,
+          row.npm,
+          row.status,
+          row.jarak,
+          row.latitude,
+          row.longitude
+        ]);
+      });
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      
+      // Auto width
+      const colWidths = [
+        { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
+        { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
+      ];
+      ws['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
+      XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+  </script>
+</body>
+</html>
