@@ -469,7 +469,11 @@
     const MAX_RADIUS_METER = 200;
     const NAMA_KAMPUS = 'Universitas Riau Kepulauan'; // ← GANTI nama kampus
     // ========================================
-    
+    const TESTING_MODE = true; // Ubah jadi true untuk testing
+    const TEST_LOCATION = {
+    latitude: KAMPUS_LATITUDE + 0.0001, // ~11 meter dari kampus
+    longitude: KAMPUS_LONGITUDE + 0.0001
+    };
     // Initialize Supabase
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
@@ -487,6 +491,34 @@
     };
 
     function getLocation() {
+
+      / TAMBAHKAN INI di awal fungsi
+  if (TESTING_MODE) {
+    console.log('⚠️ TESTING MODE ACTIVE');
+    userLocation.latitude = TEST_LOCATION.latitude;
+    userLocation.longitude = TEST_LOCATION.longitude;
+    
+    const distance = calculateDistance(
+      KAMPUS_LATITUDE,
+      KAMPUS_LONGITUDE,
+      userLocation.latitude,
+      userLocation.longitude
+    );
+    
+    isInRadius = distance <= MAX_RADIUS_METER;
+    
+    locationCard.className = 'location-card success';
+    locationTitle.textContent = '🧪 TESTING MODE - Lokasi Simulasi';
+    locationDetails.innerHTML = `
+      <strong>Koordinat Test:</strong><br>
+      Lat: ${userLocation.latitude}<br>
+      Lng: ${userLocation.longitude}<br>
+      Jarak: ${Math.round(distance)}m
+    `;
+    
+    submitBtn.disabled = false;
+    return;
+  }
       const locationCard = document.getElementById('locationCard');
       const locationTitle = document.getElementById('locationTitle');
       const locationDetails = document.getElementById('locationDetails');
