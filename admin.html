@@ -93,14 +93,21 @@
       </div>
       <div id="loading" class="loading"><div class="spinner"></div><div>Memuat data...</div></div>
       <div class="table-container" id="tableContainer" style="display: none;">
-        <table>
-          <thead>
-            <tr>
-              <th>No</th><th>Tanggal/Waktu</th><th>Nama</th><th>NPM</th><th>Status</th><th>Jarak (m)</th><th>Koordinat</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+       <table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>Tanggal/Waktu</th>
+      <th>Nama</th>
+      <th>NPM</th>
+      <th>Kelompok</th> <!-- TAMBAHAN BARU -->
+      <th>Status</th>
+      <th>Jarak (m)</th>
+      <th>Koordinat</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
       </div>
       <div id="noData" class="no-data" style="display: none;">
         <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
@@ -227,31 +234,32 @@
     }
 
     function displayData(data) {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
-      
-      data.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        const date = new Date(row.created_at);
-        
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${date.toLocaleString('id-ID', { 
-            year: 'numeric', month: 'short', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          })}</td>
-          <td><strong>${row.nama}</strong></td>
-          <td>${row.npm}</td>
-          <td><span class="badge badge-success">${row.status}</span></td>
-          <td>${row.jarak}m</td>
-          <td><small>${row.alamat}</small></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('tableContainer').style.display = 'block';
-    }
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  
+  data.forEach((row, index) => {
+    const tr = document.createElement('tr');
+    const date = new Date(row.created_at);
+    
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${date.toLocaleString('id-ID', { 
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      })}</td>
+      <td><strong>${row.nama}</strong></td>
+      <td>${row.npm}</td>
+      <td>${row.kelompok || '-'}</td>
+      <td><span class="badge badge-success">${row.status}</span></td>
+      <td>${row.jarak}m</td>
+      <td><small>${row.alamat}</small></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('tableContainer').style.display = 'block';
+}
 
     function filterTable() {
       const input = document.getElementById('searchInput').value.toLowerCase();
@@ -263,38 +271,38 @@
     }
 
     function exportCSV() {
-      let csv = 'No,Tanggal/Waktu,Nama,NPM,Status,Jarak (m),Latitude,Longitude\n';
-      state.allData.forEach((row, index) => {
-        const date = new Date(row.created_at).toLocaleString('id-ID');
-        csv += `${index + 1},"${date}","${row.nama}","${row.npm}","${row.status}",${row.jarak},${row.latitude},${row.longitude}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    }
+  let csv = 'No,Tanggal/Waktu,Nama,NPM,Kelompok,Status,Jarak (m),Latitude,Longitude\n';
+  state.allData.forEach((row, index) => {
+    const date = new Date(row.created_at).toLocaleString('id-ID');
+    csv += `${index + 1},"${date}","${row.nama}","${row.npm}","${row.kelompok || '-'}","${row.status}",${row.jarak},${row.latitude},${row.longitude}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
 
     function exportExcel() {
-      const ws_data = [['No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Status', 'Jarak (m)', 'Latitude', 'Longitude']];
-      state.allData.forEach((row, index) => {
-        ws_data.push([
-          index + 1,
-          new Date(row.created_at).toLocaleString('id-ID'),
-          row.nama, row.npm, row.status, row.jarak, row.latitude, row.longitude
-        ]);
-      });
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(ws_data);
-      ws['!cols'] = [
-        { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
-        { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
-      ];
-      XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
-      XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
+  const ws_data = [['No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Kelompok', 'Status', 'Jarak (m)', 'Latitude', 'Longitude']];
+  state.allData.forEach((row, index) => {
+    ws_data.push([
+      index + 1,
+      new Date(row.created_at).toLocaleString('id-ID'),
+      row.nama, row.npm, row.kelompok || '-', row.status, row.jarak, row.latitude, row.longitude
+    ]);
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [
+    { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
+    { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
+  XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
 
     // Prevent back after logout
     window.addEventListener('pageshow', function(event) {
