@@ -80,7 +80,7 @@
     <div class="content">
       <div class="info-box">
         <strong>ℹ️ Informasi:</strong><br>
-        Absensi tercatat sebagai <strong>HADIR</strong> jika dalam radius <strong id="radiusInfo">200m</strong> dari kampus.
+        Absensi tercatat sebagai <strong>HADIR</strong> jika dalam radius <strong id="radiusInfo">500m</strong> dari kampus.
       </div>
       
       <div class="warning-box">
@@ -148,8 +148,20 @@
           <span id="deviceDetails"></span>
         </div>
       </form>
+      <!-- Signature dengan Icon -->
+      <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #e0e0e0;">
+        <p style="font-size: 13px; color: #999; font-weight: 500;">
+          <span style="opacity: 0.5;">⚡</span>
+          Developed by 
+          <span style="color: #667eea; font-weight: 700; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">
+            SS_Tech
+          </span>
+          <span style="opacity: 0.5;">⚡</span>
+        </p>
+      </div>
+      
     </div>
-  </div>
+  </div><!-- Penutup content -->
   
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
@@ -178,9 +190,9 @@
     const CONFIG = {
       supabaseUrl: 'https://dgcislmedkwmercjffoz.supabase.co',
       supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ',
-      kampusLat: 1.0544278348225116, 
-      kampusLng: 104.03980710034313,
-      maxRadius: 200,
+      kampusLat: 1.0491874581437521, 
+      kampusLng: 103.96789498953983,
+      maxRadius: 500,
       namaKampus: 'Universitas Riau Kepulauan'
     };
 
