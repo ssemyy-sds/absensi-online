@@ -23,7 +23,7 @@
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
     .dashboard { display: none; background: #f5f7fa; min-height: 100vh; padding: 0; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; }
     .dashboard.active { display: block; }
-    .container { max-width: 1400px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+    .container { max-width: 1600px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
     .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
     .header-left h1 { font-size: 24px; margin-bottom: 4px; }
     .header-left p { font-size: 14px; opacity: 0.9; }
@@ -34,22 +34,29 @@
     .controls input:focus { outline: none; border-color: #667eea; }
     button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; }
     button:hover { background: #5568d3; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-danger { background: #f44336; }
+    .btn-danger:hover { background: #d32f2f; }
     .stats { padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; border-bottom: 1px solid #e0e0e0; }
     .stat-card { background: #f8f9fa; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea; }
     .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 8px; }
     .stat-card p { font-size: 28px; font-weight: 700; color: #333; }
     .table-container { overflow-x: auto; padding: 20px; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
-    th { background: #f8f9fa; color: #333; font-weight: 600; position: sticky; top: 0; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 13px; }
+    th { background: #f8f9fa; color: #333; font-weight: 600; position: sticky; top: 0; z-index: 10; }
     tr:hover { background: #f8f9fa; }
+    tr.duplicate { background: #ffebee !important; animation: blinkWarning 2s infinite; }
+    @keyframes blinkWarning { 0%, 100% { background: #ffebee !important; } 50% { background: #ffcdd2 !important; } }
     .loading { text-align: center; padding: 60px 20px; color: #666; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .no-data { text-align: center; padding: 60px 20px; color: #999; }
     .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
     .badge-success { background: #d4edda; color: #155724; }
-    @media (max-width: 768px) { .header { flex-direction: column; text-align: center; } .controls { flex-direction: column; } .controls input { width: 100%; } .stats { grid-template-columns: 1fr; } }
+    .device-id { font-family: 'Courier New', monospace; font-size: 11px; color: #666; }
+    .warning-icon { color: #f44336; margin-right: 4px; }
+    @media (max-width: 768px) { .header { flex-direction: column; text-align: center; } .controls { flex-direction: column; } .controls input { width: 100%; } .stats { grid-template-columns: 1fr; } table { font-size: 11px; } th, td { padding: 8px; } }
   </style>
 </head>
 <body>
@@ -66,7 +73,7 @@
       </div>
       <button type="submit" class="btn-login">🔓 Login</button>
     </form>
-    <p style="margin-top: 20px; font-size: 12px; color: #999;">Default: admin123</p>
+    <p style="margin-top: 20px; font-size: 12px; color: #999;">Default: ???</p>
   </div>
 
   <!-- Dashboard -->
@@ -75,41 +82,66 @@
       <div class="header">
         <div class="header-left">
           <h1>📊 Dashboard Admin</h1>
-          <p>Data Absensi</p>
+          <p>Data Absensi & Monitoring</p>
         </div>
         <button class="btn-logout" onclick="logout()">🚪 Logout</button>
       </div>
+      
       <div class="controls">
         <input type="text" id="searchInput" placeholder="🔍 Cari nama atau NPM..." onkeyup="filterTable()">
         <button onclick="loadData()">🔄 Refresh</button>
         <button onclick="exportCSV()">📥 CSV</button>
         <button onclick="exportExcel()">📊 Excel</button>
+        <button onclick="showDuplicateDevices()" class="btn-danger">🚨 Cek Kecurangan</button>
       </div>
+      
       <div class="stats" id="stats" style="display: none;">
-        <div class="stat-card"><h3>Total Absensi</h3><p id="totalAbsensi">0</p></div>
-        <div class="stat-card"><h3>Hari Ini</h3><p id="todayAbsensi">0</p></div>
-        <div class="stat-card"><h3>Minggu Ini</h3><p id="weekAbsensi">0</p></div>
-        <div class="stat-card"><h3>Bulan Ini</h3><p id="monthAbsensi">0</p></div>
+        <div class="stat-card">
+          <h3>Total Absensi</h3>
+          <p id="totalAbsensi">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Hari Ini</h3>
+          <p id="todayAbsensi">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Minggu Ini</h3>
+          <p id="weekAbsensi">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Bulan Ini</h3>
+          <p id="monthAbsensi">0</p>
+        </div>
+        <div class="stat-card" style="border-left-color: #f44336;">
+          <h3>⚠️ Device Duplicate</h3>
+          <p id="duplicateCount">0</p>
+        </div>
       </div>
-      <div id="loading" class="loading"><div class="spinner"></div><div>Memuat data...</div></div>
+      
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div>Memuat data...</div>
+      </div>
+      
       <div class="table-container" id="tableContainer" style="display: none;">
-      <table>
-  <thead>
-    <tr>
-      <th>No</th>
-      <th>Tanggal/Waktu</th>
-      <th>Nama</th>
-      <th>NPM</th>
-      <th>Kelompok</th>
-      <th>Status</th>
-      <th>Jarak (m)</th>
-      <th>Device ID</th> <!-- BARU -->
-      <th>IP Address</th> <!-- BARU -->
-    </tr>
-  </thead>
-  <tbody id="tableBody"></tbody>
-</table>
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal/Waktu</th>
+              <th>Nama</th>
+              <th>NPM</th>
+              <th>Kelompok</th>
+              <th>Status</th>
+              <th>Jarak (m)</th>
+              <th>Device ID</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
       </div>
+      
       <div id="noData" class="no-data" style="display: none;">
         <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
         <div>Belum ada data absensi</div>
@@ -127,26 +159,21 @@
     const CONFIG = {
       supabaseUrl: 'https://dgcislmedkwmercjffoz.supabase.co',
       supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ',
-      passwordHash: null // Will be set below
+      passwordHash: null
     };
 
-    // Set password hash (default: admin123)
     CONFIG.passwordHash = CryptoJS.SHA256('admin123').toString();
     // Untuk ganti password, ganti 'admin123' dengan password baru
     // ============================================
 
-    // Global state
     const state = {
       supabase: null,
       allData: [],
       isLoggedIn: false
     };
 
-    // Initialize
     (function init() {
       state.supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-      
-      // Check if already logged in
       const loggedIn = sessionStorage.getItem('adminLoggedIn');
       if (loggedIn === 'true') {
         showDashboard();
@@ -154,7 +181,6 @@
       }
     })();
 
-    // Login handler
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const password = document.getElementById('passwordInput').value;
@@ -227,98 +253,229 @@
       const weekCount = data.filter(d => new Date(d.created_at) >= weekAgo).length;
       const monthCount = data.filter(d => new Date(d.created_at) >= monthAgo).length;
       
+      // Count duplicate devices
+      const todayData = data.filter(d => new Date(d.created_at) >= today);
+      const deviceMap = {};
+      todayData.forEach(row => {
+        if (row.device_id) {
+          deviceMap[row.device_id] = (deviceMap[row.device_id] || 0) + 1;
+        }
+      });
+      const duplicateDevices = Object.values(deviceMap).filter(count => count > 1).length;
+      
       document.getElementById('totalAbsensi').textContent = data.length;
       document.getElementById('todayAbsensi').textContent = todayCount;
       document.getElementById('weekAbsensi').textContent = weekCount;
       document.getElementById('monthAbsensi').textContent = monthCount;
+      document.getElementById('duplicateCount').textContent = duplicateDevices;
       document.getElementById('stats').style.display = 'grid';
     }
 
-       function displayData(data) {
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '';
-  
-  data.forEach((row, index) => {
-    const tr = document.createElement('tr');
-    const date = new Date(row.created_at);
-    
-    // Highlight duplicate device
-    const isDuplicate = data.filter(r => 
-      r.device_id === row.device_id && 
-      r.id !== row.id &&
-      new Date(r.created_at).toDateString() === date.toDateString()
-    ).length > 0;
-    
-    if (isDuplicate) {
-      tr.style.background = '#ffebee'; // Red highlight
+    function displayData(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      // Group by device_id untuk deteksi duplicate
+      const deviceCount = {};
+      data.forEach(row => {
+        if (row.device_id) {
+          const dateKey = new Date(row.created_at).toDateString();
+          const key = `${row.device_id}_${dateKey}`;
+          deviceCount[key] = (deviceCount[key] || 0) + 1;
+        }
+      });
+      
+      data.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        const date = new Date(row.created_at);
+        const dateKey = date.toDateString();
+        const deviceKey = `${row.device_id}_${dateKey}`;
+        const isDuplicate = deviceCount[deviceKey] > 1;
+        
+        if (isDuplicate) {
+          tr.className = 'duplicate';
+          tr.title = '⚠️ Device ini dipakai lebih dari 1 orang di hari yang sama!';
+        }
+        
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${date.toLocaleString('id-ID', { 
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })}</td>
+          <td><strong>${row.nama}</strong></td>
+          <td>${row.npm}</td>
+          <td>${row.kelompok || '-'}</td>
+          <td><span class="badge badge-success">${row.status}</span></td>
+          <td>${row.jarak}m</td>
+          <td class="device-id">${row.device_id ? (isDuplicate ? '<span class="warning-icon">⚠️</span>' : '') + row.device_id.substring(0, 12) + '...' : '-'}</td>
+          <td><small>${row.ip_address || '-'}</small></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('tableContainer').style.display = 'block';
     }
-    
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${date.toLocaleString('id-ID', { 
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      })}</td>
-      <td><strong>${row.nama}</strong></td>
-      <td>${row.npm}</td>
-      <td>${row.kelompok || '-'}</td>
-      <td><span class="badge badge-success">${row.status}</span></td>
-      <td>${row.jarak}m</td>
-      <td><small>${row.device_id ? row.device_id.substring(0, 12) + '...' : '-'}</small></td>
-      <td><small>${row.ip_address || '-'}</small></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('tableContainer').style.display = 'block';
-}
-}
 
     function filterTable() {
       const input = document.getElementById('searchInput').value.toLowerCase();
       const filtered = state.allData.filter(row => 
         row.nama.toLowerCase().includes(input) || 
-        row.npm.toLowerCase().includes(input)
+        row.npm.toLowerCase().includes(input) ||
+        (row.kelompok && row.kelompok.toLowerCase().includes(input))
       );
       displayData(filtered);
     }
 
     function exportCSV() {
-  let csv = 'No,Tanggal/Waktu,Nama,NPM,Kelompok,Status,Jarak (m),Latitude,Longitude\n';
-  state.allData.forEach((row, index) => {
-    const date = new Date(row.created_at).toLocaleString('id-ID');
-    csv += `${index + 1},"${date}","${row.nama}","${row.npm}","${row.kelompok || '-'}","${row.status}",${row.jarak},${row.latitude},${row.longitude}\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
+      let csv = 'No,Tanggal/Waktu,Nama,NPM,Kelompok,Status,Jarak (m),Latitude,Longitude,Device ID,IP Address,User Agent\n';
+      
+      state.allData.forEach((row, index) => {
+        const date = new Date(row.created_at).toLocaleString('id-ID');
+        const escapeCSV = (str) => {
+          if (!str) return '-';
+          return `"${String(str).replace(/"/g, '""')}"`;
+        };
+        
+        csv += `${index + 1},`;
+        csv += `${escapeCSV(date)},`;
+        csv += `${escapeCSV(row.nama)},`;
+        csv += `${escapeCSV(row.npm)},`;
+        csv += `${escapeCSV(row.kelompok || '-')},`;
+        csv += `${escapeCSV(row.status)},`;
+        csv += `${row.jarak},`;
+        csv += `${row.latitude},`;
+        csv += `${row.longitude},`;
+        csv += `${escapeCSV(row.device_id || '-')},`;
+        csv += `${escapeCSV(row.ip_address || '-')},`;
+        csv += `${escapeCSV(row.user_agent || '-')}\n`;
+      });
+      
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
 
     function exportExcel() {
-  const ws_data = [['No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Kelompok', 'Status', 'Jarak (m)', 'Latitude', 'Longitude']];
-  state.allData.forEach((row, index) => {
-    ws_data.push([
-      index + 1,
-      new Date(row.created_at).toLocaleString('id-ID'),
-      row.nama, row.npm, row.kelompok || '-', row.status, row.jarak, row.latitude, row.longitude
-    ]);
-  });
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [
-    { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
-    { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
-  ];
-  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
-  XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
-}
+      const ws_data = [[
+        'No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Kelompok', 'Status', 
+        'Jarak (m)', 'Latitude', 'Longitude', 'Device ID', 'IP Address', 'User Agent'
+      ]];
+      
+      state.allData.forEach((row, index) => {
+        ws_data.push([
+          index + 1,
+          new Date(row.created_at).toLocaleString('id-ID'),
+          row.nama,
+          row.npm,
+          row.kelompok || '-',
+          row.status,
+          row.jarak,
+          row.latitude,
+          row.longitude,
+          row.device_id || '-',
+          row.ip_address || '-',
+          row.user_agent || '-'
+        ]);
+      });
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
+        { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, 
+        { wch: 12 }, { wch: 20 }, { wch: 15 }, { wch: 40 }
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
+      XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
 
-    // Prevent back after logout
+    function showDuplicateDevices() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const deviceMap = {};
+      
+      state.allData.forEach(row => {
+        const rowDate = new Date(row.created_at);
+        rowDate.setHours(0, 0, 0, 0);
+        
+        if (rowDate.getTime() === today.getTime() && row.device_id) {
+          if (!deviceMap[row.device_id]) {
+            deviceMap[row.device_id] = [];
+          }
+          deviceMap[row.device_id].push(row);
+        }
+      });
+      
+      const duplicates = Object.entries(deviceMap).filter(([_, users]) => users.length > 1);
+      
+      if (duplicates.length === 0) {
+        alert('✅ TIDAK ADA KECURANGAN TERDETEKSI\n\n' +
+              'Semua mahasiswa menggunakan device masing-masing.\n' +
+              'Sistem berjalan dengan baik.');
+        return;
+      }
+      
+      let report = '🚨 LAPORAN KECURANGAN TERDETEKSI\n';
+      report += '═══════════════════════════════════════════\n\n';
+      report += `📅 Tanggal: ${today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
+      report += `⚠️  Total device mencurigakan: ${duplicates.length}\n`;
+      report += `👥 Total mahasiswa terlibat: ${duplicates.reduce((sum, [_, users]) => sum + users.length, 0)}\n\n`;
+      report += '───────────────────────────────────────────\n\n';
+      
+      duplicates.forEach(([deviceId, users], index) => {
+        report += `${index + 1}. 📱 Device ID: ${deviceId.substring(0, 20)}...\n`;
+        report += `   🔢 Digunakan oleh ${users.length} orang:\n\n`;
+        
+        users.forEach((user, i) => {
+          const time = new Date(user.created_at).toLocaleTimeString('id-ID', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          report += `   ${i + 1}) ${user.nama}\n`;
+          report += `      NPM: ${user.npm}\n`;
+          report += `      Kelompok: ${user.kelompok || '-'}\n`;
+          report += `      Waktu: ${time}\n`;
+          report += `      Jarak: ${user.jarak}m\n\n`;
+        });
+        
+        report += `   🌐 IP Address: ${users[0].ip_address || 'unknown'}\n`;
+        report += `   💻 Browser: ${users[0].user_agent ? users[0].user_agent.substring(0, 50) + '...' : 'unknown'}\n`;
+        report += '\n───────────────────────────────────────────\n\n';
+      });
+      
+      report += '⚠️  TINDAKAN YANG DISARANKAN:\n\n';
+      report += '1. 📞 Panggil mahasiswa yang terlibat untuk klarifikasi\n';
+      report += '2. 📹 Cek CCTV jika tersedia untuk verifikasi\n';
+      report += '3. 📝 Dokumentasikan kasus untuk arsip\n';
+      report += '4. ⚖️  Berikan sanksi sesuai aturan akademik\n';
+      report += '5. 🔒 Tingkatkan pengawasan untuk mencegah terulang\n\n';
+      report += '═══════════════════════════════════════════\n';
+      report += 'Laporan ini di-generate otomatis oleh sistem\n';
+      report += `Waktu: ${new Date().toLocaleString('id-ID')}\n`;
+      
+      alert(report);
+      
+      if (confirm('💾 Export laporan ini ke file TXT?')) {
+        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laporan_kecurangan_${today.toISOString().split('T')[0]}.txt`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+    }
+
     window.addEventListener('pageshow', function(event) {
       if (event.persisted) window.location.reload();
     });
