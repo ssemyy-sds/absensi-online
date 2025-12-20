@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧪 Test Mode - Absensi Online</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; border: 3px solid #f5576c; }
+    .header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 32px 24px; color: white; text-align: center; position: relative; }
+    .header h1 { font-size: 28px; margin-bottom: 8px; font-weight: 600; }
+    .header p { font-size: 14px; opacity: 0.9; }
+    .test-badge { position: absolute; top: 10px; right: 10px; background: #ff0000; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; animation: blink 1s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .content { padding: 24px; }
+    .warning-box { background: #fff3cd; border-left: 4px solid #ff9800; padding: 16px; margin-bottom: 24px; border-radius: 4px; font-size: 14px; line-height: 1.6; }
+    .test-controls { background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
+    .test-controls h3 { font-size: 16px; margin-bottom: 12px; color: #333; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
+    .required { color: #d93025; }
+    input, select { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: all 0.3s; font-family: inherit; background: white; }
+    input:focus, select:focus { outline: none; border-color: #f5576c; box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1); }
+    .btn-group { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    button { flex: 1; padding: 14px 24px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: inherit; }
+    .btn-primary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6); }
+    .btn-secondary { background: white; color: #f5576c; border: 2px solid #f5576c; }
+    .btn-secondary:hover { background: #fff0f3; }
+    .btn-success { background: #4caf50; color: white; }
+    .btn-info { background: #2196f3; color: white; }
+    .location-card { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+    .location-card.test { border-color: #f5576c; background: #fff0f3; }
+    .location-header { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .location-details { font-size: 13px; color: #666; line-height: 1.6; }
+    .distance-badge { display: inline-block; padding: 6px 12px; border-radius: 16px; font-weight: 600; font-size: 13px; margin-top: 8px; background: #4caf50; color: white; }
+    .message { padding: 16px; border-radius: 8px; margin-bottom: 20px; display: none; }
+    .message.show { display: block; }
+    .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .help-text { font-size: 12px; color: #666; margin-top: 4px; }
+    .test-info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; }
+    @media (max-width: 640px) { body { padding: 0; } .container { border-radius: 0; } .btn-group { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="test-badge">🧪 TEST MODE</div>
+      <h1>🧪 Test Mode</h1>
+      <p>Developer Testing Environment</p>
+    </div>
+    
+    <div class="content">
+      <div class="warning-box">
+        <strong>⚠️ PERHATIAN - MODE TESTING</strong><br>
+        • Halaman ini HANYA untuk testing developer<br>
+        • GPS validation DI-BYPASS<br>
+        • Data yang di-submit akan masuk ke database ASLI<br>
+        • Jangan share URL ini ke mahasiswa!
+      </div>
+
+      <div class="test-controls">
+        <h3>🎮 Test Controls</h3>
+        <div class="form-group">
+          <label>Simulasi Lokasi</label>
+          <select id="locationPreset" onchange="applyLocationPreset()">
+            <option value="custom">Custom Coordinates</option>
+            <option value="kampus">Di Kampus (Valid)</option>
+            <option value="dekat">Dekat Kampus (100m)</option>
+            <option value="jauh">Jauh dari Kampus (1km)</option>
+            <option value="random">Random Location</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Latitude</label>
+          <input type="number" id="testLat" value="1.0491874581437521" step="0.0000001">
+        </div>
+        
+        <div class="form-group">
+          <label>Longitude</label>
+          <input type="number" id="testLng" value="103.96789498953983" step="0.0000001">
+        </div>
+
+        <div class="test-info">
+          💡 Koordinat kampus: 1.0491874581437521, 103.96789498953983
+        </div>
+      </div>
+
+      <div class="message" id="message"></div>
+      
+      <form id="absensiForm">
+        <div class="form-group">
+          <label>Nama Lengkap <span class="required">*</span></label>
+          <input type="text" id="nama" placeholder="Masukkan nama lengkap" required autocomplete="name">
+        </div>
+        
+        <div class="form-group">
+          <label>NPM <span class="required">*</span></label>
+          <input type="text" id="npm" placeholder="Masukkan NPM" required autocomplete="off">
+          <div class="help-text">Contoh: 231030003</div>
+        </div>
+        
+        <div class="form-group">
+          <label>Kelompok <span class="required">*</span></label>
+          <select id="kelompok" required>
+            <option value="">-- Pilih Kelompok --</option>
+            <option value="Kelompok 1">Kelompok 1</option>
+            <option value="Kelompok 2">Kelompok 2</option>
+            <option value="Kelompok 3">Kelompok 3</option>
+            <option value="Kelompok 4">Kelompok 4</option>
+            <option value="Kelompok 5">Kelompok 5</option>
+            <option value="Kelompok 6">Kelompok 6</option>
+            <option value="Kelompok 7">Kelompok 7</option>
+            <option value="Kelompok 8">Kelompok 8</option>
+          </select>
+        </div>
+        
+        <div class="location-card test">
+          <div class="location-header">
+            <span>🧪</span>
+            <span>Test Mode - GPS Bypass Active</span>
+          </div>
+          <div class="location-details" id="locationDetails">
+            Koordinat simulasi: <span id="simCoords">Loading...</span><br>
+            Jarak dari kampus: <span id="simDistance">Calculating...</span>
+            <div class="distance-badge">
+              TEST MODE ✓
+            </div>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button type="button" class="btn-info" onclick="quickFill()">⚡ Quick Fill</button>
+          <button type="button" class="btn-secondary" onclick="updateSimulation()">🔄 Update Sim</button>
+          <button type="submit" class="btn-primary" id="submitBtn">
+            🧪 Test Submit
+          </button>
+        </div>
+      </form>
+
+      <div style="text-align: center; padding: 20px 0 10px 0; margin-top: 30px; border-top: 1px solid #e0e0e0;">
+        <p style="font-size: 13px; color: #999; font-weight: 500;">
+          <span style="opacity: 0.5;">⚡</span>
+          Developed by
+          <span style="color: #f5576c; font-weight: 700;">SS_Tech</span>
+          <span style="opacity: 0.5;">⚡</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fingerprintjs2@2.1.4/dist/fingerprint2.min.js"></script>
+  <script>
+    const CONFIG = {
+      supabaseUrl: 'https://dgcislmedkwmercjffoz.supabase.co',
+      supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ',
+      kampusLat: 1.0491874581437521,
+      kampusLng: 103.96789498953983,
+      maxRadius: 500
+    };
+
+    const state = {
+      supabase: null,
+      testLat: CONFIG.kampusLat,
+      testLng: CONFIG.kampusLng,
+      deviceId: 'TEST_DEVICE_' + Date.now()
+    };
+
+    (function init() {
+      state.supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+      generateTestDeviceId();
+      updateSimulation();
+    })();
+
+    function generateTestDeviceId() {
+      if (window.Fingerprint2) {
+        Fingerprint2.get((components) => {
+          const values = components.map(c => c.value);
+          state.deviceId = 'TEST_' + Fingerprint2.x64hash128(values.join(''), 31);
+        });
+      }
+    }
+
+    function calcDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function applyLocationPreset() {
+      const preset = document.getElementById('locationPreset').value;
+      
+      switch(preset) {
+        case 'kampus':
+          document.getElementById('testLat').value = CONFIG.kampusLat;
+          document.getElementById('testLng').value = CONFIG.kampusLng;
+          break;
+        case 'dekat':
+          document.getElementById('testLat').value = CONFIG.kampusLat + 0.0009;
+          document.getElementById('testLng').value = CONFIG.kampusLng + 0.0009;
+          break;
+        case 'jauh':
+          document.getElementById('testLat').value = CONFIG.kampusLat + 0.009;
+          document.getElementById('testLng').value = CONFIG.kampusLng + 0.009;
+          break;
+        case 'random':
+          document.getElementById('testLat').value = CONFIG.kampusLat + (Math.random() - 0.5) * 0.02;
+          document.getElementById('testLng').value = CONFIG.kampusLng + (Math.random() - 0.5) * 0.02;
+          break;
+      }
+      
+      updateSimulation();
+    }
+
+    function updateSimulation() {
+      state.testLat = parseFloat(document.getElementById('testLat').value);
+      state.testLng = parseFloat(document.getElementById('testLng').value);
+      
+      const dist = calcDistance(CONFIG.kampusLat, CONFIG.kampusLng, state.testLat, state.testLng);
+      
+      document.getElementById('simCoords').textContent = `${state.testLat.toFixed(6)}, ${state.testLng.toFixed(6)}`;
+      document.getElementById('simDistance').textContent = `${Math.round(dist)}m (${dist <= CONFIG.maxRadius ? 'VALID ✓' : 'INVALID ✗'})`;
+    }
+
+    function quickFill() {
+      const names = ['Test User 1', 'Test User 2', 'Test User 3', 'John Doe', 'Jane Smith'];
+      const npms = ['231030001', '231030002', '231030003', '231030004', '231030005'];
+      const groups = ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5'];
+      
+      const rand = Math.floor(Math.random() * names.length);
+      
+      document.getElementById('nama').value = names[rand];
+      document.getElementById('npm').value = npms[rand];
+      document.getElementById('kelompok').value = groups[rand];
+    }
+
+    document.getElementById('absensiForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const nama = document.getElementById('nama').value.trim();
+      const npm = document.getElementById('npm').value.trim();
+      const kelompok = document.getElementById('kelompok').value;
+      
+      if (!nama || !npm || !kelompok) {
+        showMsg('error', '❌ Semua field wajib diisi!');
+        return;
+      }
+      
+      const dist = calcDistance(CONFIG.kampusLat, CONFIG.kampusLng, state.testLat, state.testLng);
+      
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('submitBtn').textContent = '⏳ Submitting...';
+      
+      const { data, error } = await state.supabase
+        .from('absensi')
+        .insert([{
+          nama: nama,
+          npm: npm,
+          kelompok: kelompok,
+          status: 'HADIR',
+          latitude: state.testLat,
+          longitude: state.testLng,
+          jarak: Math.round(dist),
+          alamat: `${state.testLat.toFixed(6)}, ${state.testLng.toFixed(6)}`,
+          device_id: state.deviceId,
+          ip_address: 'TEST_MODE',
+          user_agent: navigator.userAgent + ' [TEST_MODE]'
+        }])
+        .select();
+      
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').textContent = '🧪 Test Submit';
+      
+      if (error) {
+        showMsg('error', '❌ Error: ' + error.message);
+      } else {
+        showMsg('success', `
+          ✅ <strong>Test submission berhasil!</strong><br><br>
+          <small>Nama: ${nama}</small><br>
+          <small>NPM: ${npm}</small><br>
+          <small>Kelompok: ${kelompok}</small><br>
+          <small>Jarak: ${Math.round(dist)}m</small><br>
+          <small>Device: ${state.deviceId.substring(0, 20)}...</small><br><br>
+          <small>⚠️ Data masuk ke database ASLI!</small>
+        `);
+        
+        setTimeout(() => {
+          document.getElementById('absensiForm').reset();
+          document.getElementById('message').classList.remove('show');
+        }, 5000);
+      }
+    });
+
+    function showMsg(type, text) {
+      const msg = document.getElementById('message');
+      msg.className = 'message ' + type + ' show';
+      msg.innerHTML = text;
+      msg.scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
