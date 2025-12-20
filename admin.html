@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -18,6 +18,7 @@
     .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
     .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
     .btn-login:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
     .error-message { background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; border: 1px solid #ef5350; }
     .error-message.show { display: block; animation: shake 0.5s; }
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
@@ -37,6 +38,8 @@
     button:active { transform: translateY(0); }
     .btn-danger { background: #f44336; }
     .btn-danger:hover { background: #d32f2f; }
+    .btn-delete { padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s; }
+    .btn-delete:hover { background: #d32f2f; transform: scale(1.05); }
     .stats { padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; border-bottom: 1px solid #e0e0e0; }
     .stat-card { background: #f8f9fa; padding: 16px; border-radius: 8px; border-left: 4px solid #667eea; }
     .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 8px; }
@@ -46,8 +49,7 @@
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 13px; }
     th { background: #f8f9fa; color: #333; font-weight: 600; position: sticky; top: 0; z-index: 10; }
     tr:hover { background: #f8f9fa; }
-    tr.duplicate { background: #ffebee !important; animation: blinkWarning 2s infinite; }
-    @keyframes blinkWarning { 0%, 100% { background: #ffebee !important; } 50% { background: #ffcdd2 !important; } }
+    tr.duplicate { background: #ffebee !important; }
     .loading { text-align: center; padding: 60px 20px; color: #666; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -60,7 +62,6 @@
   </style>
 </head>
 <body>
-  <!-- Login Form -->
   <div class="login-container" id="loginContainer">
     <div class="login-icon">🔐</div>
     <h1>Admin Login</h1>
@@ -73,10 +74,9 @@
       </div>
       <button type="submit" class="btn-login">🔓 Login</button>
     </form>
-    <p style="margin-top: 20px; font-size: 12px; color: #999;">Default: ???</p>
+    <p style="margin-top: 20px; font-size: 12px; color: #999;">Default: admin123</p>
   </div>
 
-  <!-- Dashboard -->
   <div class="dashboard" id="dashboard">
     <div class="container">
       <div class="header">
@@ -86,7 +86,6 @@
         </div>
         <button class="btn-logout" onclick="logout()">🚪 Logout</button>
       </div>
-      
       <div class="controls">
         <input type="text" id="searchInput" placeholder="🔍 Cari nama atau NPM..." onkeyup="filterTable()">
         <button onclick="loadData()">🔄 Refresh</button>
@@ -94,55 +93,24 @@
         <button onclick="exportExcel()">📊 Excel</button>
         <button onclick="showDuplicateDevices()" class="btn-danger">🚨 Cek Kecurangan</button>
       </div>
-      
       <div class="stats" id="stats" style="display: none;">
-        <div class="stat-card">
-          <h3>Total Absensi</h3>
-          <p id="totalAbsensi">0</p>
-        </div>
-        <div class="stat-card">
-          <h3>Hari Ini</h3>
-          <p id="todayAbsensi">0</p>
-        </div>
-        <div class="stat-card">
-          <h3>Minggu Ini</h3>
-          <p id="weekAbsensi">0</p>
-        </div>
-        <div class="stat-card">
-          <h3>Bulan Ini</h3>
-          <p id="monthAbsensi">0</p>
-        </div>
-        <div class="stat-card" style="border-left-color: #f44336;">
-          <h3>⚠️ Device Duplicate</h3>
-          <p id="duplicateCount">0</p>
-        </div>
+        <div class="stat-card"><h3>Total Absensi</h3><p id="totalAbsensi">0</p></div>
+        <div class="stat-card"><h3>Hari Ini</h3><p id="todayAbsensi">0</p></div>
+        <div class="stat-card"><h3>Minggu Ini</h3><p id="weekAbsensi">0</p></div>
+        <div class="stat-card"><h3>Bulan Ini</h3><p id="monthAbsensi">0</p></div>
+        <div class="stat-card" style="border-left-color: #f44336;"><h3>⚠️ Device Duplicate</h3><p id="duplicateCount">0</p></div>
       </div>
-      
-      <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <div>Memuat data...</div>
-      </div>
-      
+      <div id="loading" class="loading"><div class="spinner"></div><div>Memuat data...</div></div>
       <div class="table-container" id="tableContainer" style="display: none;">
         <table>
           <thead>
-          <tr>
-            <th>No</th>
-            <th>Tanggal/Waktu</th>
-            <th>Nama</th>
-            <th>NPM</th>
-            <th>Kelompok</th>
-            <th>Status</th>
-            <th>Jarak (m)</th>
-            <th>Device ID</th>
-            <th>IP Address</th>
-            <th>Actions</th> <!-- KOLOM BARU -->
-          </tr>
+            <tr>
+              <th>No</th><th>Tanggal/Waktu</th><th>Nama</th><th>NPM</th><th>Kelompok</th><th>Status</th><th>Jarak (m)</th><th>Device ID</th><th>IP Address</th><th>Actions</th>
+            </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
-      
       <div id="noData" class="no-data" style="display: none;">
         <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
         <div>Belum ada data absensi</div>
@@ -154,9 +122,6 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script>
-    // ============================================
-    // KONFIGURASI - GANTI DENGAN DATA ANDA
-    // ============================================
     const CONFIG = {
       supabaseUrl: 'https://dgcislmedkwmercjffoz.supabase.co',
       supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2lzbG1lZGt3bWVyY2pmZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTI1ODYsImV4cCI6MjA4MTUyODU4Nn0.xeSSEmLPGKryut2IcCkbRi85CidxiYZcpK-bAXiDNIQ',
@@ -164,8 +129,6 @@
     };
 
     CONFIG.passwordHash = CryptoJS.SHA256('admin123').toString();
-    // Untuk ganti password, ganti 'admin123' dengan password baru
-    // ============================================
 
     const state = {
       supabase: null,
@@ -254,7 +217,6 @@
       const weekCount = data.filter(d => new Date(d.created_at) >= weekAgo).length;
       const monthCount = data.filter(d => new Date(d.created_at) >= monthAgo).length;
       
-      // Count duplicate devices
       const todayData = data.filter(d => new Date(d.created_at) >= today);
       const deviceMap = {};
       todayData.forEach(row => {
@@ -276,7 +238,6 @@
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
       
-      // Group by device_id untuk deteksi duplicate
       const deviceCount = {};
       data.forEach(row => {
         if (row.device_id) {
@@ -295,15 +256,12 @@
         
         if (isDuplicate) {
           tr.className = 'duplicate';
-          tr.title = '⚠️ Device ini dipakai lebih dari 1 orang di hari yang sama!';
+          tr.title = '⚠️ Device ini dipakai lebih dari 1 orang!';
         }
         
         tr.innerHTML = `
           <td>${index + 1}</td>
-          <td>${date.toLocaleString('id-ID', { 
-            year: 'numeric', month: 'short', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          })}</td>
+          <td>${date.toLocaleString('id-ID', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
           <td><strong>${row.nama}</strong></td>
           <td>${row.npm}</td>
           <td>${row.kelompok || '-'}</td>
@@ -311,6 +269,11 @@
           <td>${row.jarak}m</td>
           <td class="device-id">${row.device_id ? (isDuplicate ? '<span class="warning-icon">⚠️</span>' : '') + row.device_id.substring(0, 12) + '...' : '-'}</td>
           <td><small>${row.ip_address || '-'}</small></td>
+          <td>
+            <button onclick="deleteRow(${row.id}, '${row.nama}', '${row.npm}')" class="btn-delete" title="Hapus data ini">
+              🗑️ Delete
+            </button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -318,45 +281,43 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('tableContainer').style.display = 'block';
     }
-    // Fungsi delete row
-  async function deleteRow(id, nama, npm) {
-  const confirmed = confirm(
-    `⚠️ KONFIRMASI HAPUS DATA\n\n` +
-    `Nama: ${nama}\n` +
-    `NPM: ${npm}\n\n` +
-    `Data akan dihapus PERMANEN!\n` +
-    `Yakin ingin melanjutkan?`
-  );
-  
-  if (!confirmed) return;
-  
-  // Double confirmation untuk safety
-  const doubleConfirm = confirm(
-    `🚨 KONFIRMASI TERAKHIR\n\n` +
-    `Anda akan menghapus data:\n` +
-    `${nama} (${npm})\n\n` +
-    `Ketik OK untuk melanjutkan.`
-  );
-  
-  if (!doubleConfirm) return;
-  
-  try {
-    const { error } = await state.supabase
-      .from('absensi')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    alert(`✅ Data berhasil dihapus!\n\nNama: ${nama}\nNPM: ${npm}`);
-    
-    // Reload data
-    loadData();
-    
-  } catch (error) {
-    alert(`❌ Gagal menghapus data!\n\nError: ${error.message}`);
-  }
-}
+
+    async function deleteRow(id, nama, npm) {
+      const confirmed = confirm(
+        `⚠️ KONFIRMASI HAPUS DATA\n\n` +
+        `Nama: ${nama}\n` +
+        `NPM: ${npm}\n\n` +
+        `Data akan dihapus PERMANEN dari database!\n` +
+        `Yakin ingin melanjutkan?`
+      );
+      
+      if (!confirmed) return;
+      
+      const doubleConfirm = confirm(
+        `🚨 KONFIRMASI TERAKHIR\n\n` +
+        `Anda akan menghapus data:\n` +
+        `${nama} (${npm})\n\n` +
+        `Tindakan ini TIDAK DAPAT dibatalkan!`
+      );
+      
+      if (!doubleConfirm) return;
+      
+      try {
+        const { error } = await state.supabase
+          .from('absensi')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        alert(`✅ Data berhasil dihapus!\n\nNama: ${nama}\nNPM: ${npm}\n\nData telah dihapus dari database Supabase.`);
+        loadData();
+        
+      } catch (error) {
+        alert(`❌ Gagal menghapus data!\n\nError: ${error.message}`);
+      }
+    }
+
     function filterTable() {
       const input = document.getElementById('searchInput').value.toLowerCase();
       const filtered = state.allData.filter(row => 
@@ -369,28 +330,11 @@
 
     function exportCSV() {
       let csv = 'No,Tanggal/Waktu,Nama,NPM,Kelompok,Status,Jarak (m),Latitude,Longitude,Device ID,IP Address,User Agent\n';
-      
       state.allData.forEach((row, index) => {
         const date = new Date(row.created_at).toLocaleString('id-ID');
-        const escapeCSV = (str) => {
-          if (!str) return '-';
-          return `"${String(str).replace(/"/g, '""')}"`;
-        };
-        
-        csv += `${index + 1},`;
-        csv += `${escapeCSV(date)},`;
-        csv += `${escapeCSV(row.nama)},`;
-        csv += `${escapeCSV(row.npm)},`;
-        csv += `${escapeCSV(row.kelompok || '-')},`;
-        csv += `${escapeCSV(row.status)},`;
-        csv += `${row.jarak},`;
-        csv += `${row.latitude},`;
-        csv += `${row.longitude},`;
-        csv += `${escapeCSV(row.device_id || '-')},`;
-        csv += `${escapeCSV(row.ip_address || '-')},`;
-        csv += `${escapeCSV(row.user_agent || '-')}\n`;
+        const escapeCSV = (str) => { if (!str) return '-'; return `"${String(str).replace(/"/g, '""')}"`; };
+        csv += `${index + 1},${escapeCSV(date)},${escapeCSV(row.nama)},${escapeCSV(row.npm)},${escapeCSV(row.kelompok || '-')},${escapeCSV(row.status)},${row.jarak},${row.latitude},${row.longitude},${escapeCSV(row.device_id || '-')},${escapeCSV(row.ip_address || '-')},${escapeCSV(row.user_agent || '-')}\n`;
       });
-      
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -401,37 +345,13 @@
     }
 
     function exportExcel() {
-      const ws_data = [[
-        'No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Kelompok', 'Status', 
-        'Jarak (m)', 'Latitude', 'Longitude', 'Device ID', 'IP Address', 'User Agent'
-      ]];
-      
+      const ws_data = [['No', 'Tanggal/Waktu', 'Nama', 'NPM', 'Kelompok', 'Status', 'Jarak (m)', 'Latitude', 'Longitude', 'Device ID', 'IP Address', 'User Agent']];
       state.allData.forEach((row, index) => {
-        ws_data.push([
-          index + 1,
-          new Date(row.created_at).toLocaleString('id-ID'),
-          row.nama,
-          row.npm,
-          row.kelompok || '-',
-          row.status,
-          row.jarak,
-          row.latitude,
-          row.longitude,
-          row.device_id || '-',
-          row.ip_address || '-',
-          row.user_agent || '-'
-        ]);
+        ws_data.push([index + 1, new Date(row.created_at).toLocaleString('id-ID'), row.nama, row.npm, row.kelompok || '-', row.status, row.jarak, row.latitude, row.longitude, row.device_id || '-', row.ip_address || '-', row.user_agent || '-']);
       });
-      
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(ws_data);
-      
-      ws['!cols'] = [
-        { wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, 
-        { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, 
-        { wch: 12 }, { wch: 20 }, { wch: 15 }, { wch: 40 }
-      ];
-      
+      ws['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 15 }, { wch: 40 }];
       XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
       XLSX.writeFile(wb, `absensi_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
@@ -439,77 +359,38 @@
     function showDuplicateDevices() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
       const deviceMap = {};
-      
       state.allData.forEach(row => {
         const rowDate = new Date(row.created_at);
         rowDate.setHours(0, 0, 0, 0);
-        
         if (rowDate.getTime() === today.getTime() && row.device_id) {
-          if (!deviceMap[row.device_id]) {
-            deviceMap[row.device_id] = [];
-          }
+          if (!deviceMap[row.device_id]) deviceMap[row.device_id] = [];
           deviceMap[row.device_id].push(row);
         }
       });
-      
       const duplicates = Object.entries(deviceMap).filter(([_, users]) => users.length > 1);
-      
       if (duplicates.length === 0) {
-        alert('✅ TIDAK ADA KECURANGAN TERDETEKSI\n\n' +
-              'Semua mahasiswa menggunakan device masing-masing.\n' +
-              'Sistem berjalan dengan baik.');
+        alert('✅ Tidak ada kecurangan terdeteksi hari ini!');
         return;
       }
-      
-      let report = '🚨 LAPORAN KECURANGAN TERDETEKSI\n';
-      report += '═══════════════════════════════════════════\n\n';
-      report += `📅 Tanggal: ${today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n`;
-      report += `⚠️  Total device mencurigakan: ${duplicates.length}\n`;
-      report += `👥 Total mahasiswa terlibat: ${duplicates.reduce((sum, [_, users]) => sum + users.length, 0)}\n\n`;
-      report += '───────────────────────────────────────────\n\n';
-      
+      let report = '🚨 LAPORAN KECURANGAN\n═══════════════════════\n\n';
+      report += `Tanggal: ${today.toLocaleDateString('id-ID')}\n`;
+      report += `Device mencurigakan: ${duplicates.length}\n\n`;
       duplicates.forEach(([deviceId, users], index) => {
-        report += `${index + 1}. 📱 Device ID: ${deviceId.substring(0, 20)}...\n`;
-        report += `   🔢 Digunakan oleh ${users.length} orang:\n\n`;
-        
+        report += `${index + 1}. Device: ${deviceId.substring(0, 20)}...\n`;
+        report += `   Dipakai ${users.length} orang:\n`;
         users.forEach((user, i) => {
-          const time = new Date(user.created_at).toLocaleTimeString('id-ID', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit'
-          });
-          report += `   ${i + 1}) ${user.nama}\n`;
-          report += `      NPM: ${user.npm}\n`;
-          report += `      Kelompok: ${user.kelompok || '-'}\n`;
-          report += `      Waktu: ${time}\n`;
-          report += `      Jarak: ${user.jarak}m\n\n`;
+          report += `   ${i + 1}) ${user.nama} (${user.npm}) - ${new Date(user.created_at).toLocaleTimeString('id-ID')}\n`;
         });
-        
-        report += `   🌐 IP Address: ${users[0].ip_address || 'unknown'}\n`;
-        report += `   💻 Browser: ${users[0].user_agent ? users[0].user_agent.substring(0, 50) + '...' : 'unknown'}\n`;
-        report += '\n───────────────────────────────────────────\n\n';
+        report += `   IP: ${users[0].ip_address || 'unknown'}\n\n`;
       });
-      
-      report += '⚠️  TINDAKAN YANG DISARANKAN:\n\n';
-      report += '1. 📞 Panggil mahasiswa yang terlibat untuk klarifikasi\n';
-      report += '2. 📹 Cek CCTV jika tersedia untuk verifikasi\n';
-      report += '3. 📝 Dokumentasikan kasus untuk arsip\n';
-      report += '4. ⚖️  Berikan sanksi sesuai aturan akademik\n';
-      report += '5. 🔒 Tingkatkan pengawasan untuk mencegah terulang\n\n';
-      report += '═══════════════════════════════════════════\n';
-      report += 'Laporan ini di-generate otomatis oleh sistem\n';
-      report += `Waktu: ${new Date().toLocaleString('id-ID')}\n`;
-      
       alert(report);
-      
-      if (confirm('💾 Export laporan ini ke file TXT?')) {
+      if (confirm('Export laporan?')) {
         const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `laporan_kecurangan_${today.toISOString().split('T')[0]}.txt`;
+        a.download = `laporan_${today.toISOString().split('T')[0]}.txt`;
         a.click();
         window.URL.revokeObjectURL(url);
       }
