@@ -126,17 +126,18 @@
       <div class="table-container" id="tableContainer" style="display: none;">
         <table>
           <thead>
-            <tr>
-              <th>No</th>
-              <th>Tanggal/Waktu</th>
-              <th>Nama</th>
-              <th>NPM</th>
-              <th>Kelompok</th>
-              <th>Status</th>
-              <th>Jarak (m)</th>
-              <th>Device ID</th>
-              <th>IP Address</th>
-            </tr>
+          <tr>
+            <th>No</th>
+            <th>Tanggal/Waktu</th>
+            <th>Nama</th>
+            <th>NPM</th>
+            <th>Kelompok</th>
+            <th>Status</th>
+            <th>Jarak (m)</th>
+            <th>Device ID</th>
+            <th>IP Address</th>
+            <th>Actions</th> <!-- KOLOM BARU -->
+          </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
@@ -317,7 +318,45 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('tableContainer').style.display = 'block';
     }
-
+    // Fungsi delete row
+  async function deleteRow(id, nama, npm) {
+  const confirmed = confirm(
+    `⚠️ KONFIRMASI HAPUS DATA\n\n` +
+    `Nama: ${nama}\n` +
+    `NPM: ${npm}\n\n` +
+    `Data akan dihapus PERMANEN!\n` +
+    `Yakin ingin melanjutkan?`
+  );
+  
+  if (!confirmed) return;
+  
+  // Double confirmation untuk safety
+  const doubleConfirm = confirm(
+    `🚨 KONFIRMASI TERAKHIR\n\n` +
+    `Anda akan menghapus data:\n` +
+    `${nama} (${npm})\n\n` +
+    `Ketik OK untuk melanjutkan.`
+  );
+  
+  if (!doubleConfirm) return;
+  
+  try {
+    const { error } = await state.supabase
+      .from('absensi')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    alert(`✅ Data berhasil dihapus!\n\nNama: ${nama}\nNPM: ${npm}`);
+    
+    // Reload data
+    loadData();
+    
+  } catch (error) {
+    alert(`❌ Gagal menghapus data!\n\nError: ${error.message}`);
+  }
+}
     function filterTable() {
       const input = document.getElementById('searchInput').value.toLowerCase();
       const filtered = state.allData.filter(row => 
